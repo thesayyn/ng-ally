@@ -1,4 +1,5 @@
 {
     "name": "@tdadmin/devkit",
-    "version": "0.0.0-PLACEHOLDER"
+    "version": "0.0.0-PLACEHOLDER",
+    "builders": "builders.json"
 }

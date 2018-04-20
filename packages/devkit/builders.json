@@ -8,7 +8,7 @@
       },
       "build": {
         "class": "./src/build",
-        "schema": "./src/biuld/schema.json",
+        "schema": "./src/build/schema.json",
         "description": "Build a server app."
       }
     }

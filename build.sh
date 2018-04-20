@@ -417,7 +417,7 @@ do
 
     if [ ${PACKAGE} = "devkit" ]; then
     echo "======        Copy ${PACKAGE}  schema.json and builders.json files"
-      rsync -am --include="schema.json" --include="builders.json" --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
+      rsync -ar --include="schema.json" --include="builders.json" --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
     fi
     
     cp ${ROOT_DIR}/README.md ${NPM_DIR}/

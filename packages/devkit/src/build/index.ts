@@ -8,6 +8,8 @@ import { BuildServerSchema } from './schema';
 export class DevServerBuilder implements Builder<BuildServerSchema> {
 
     run(builderConfig: BuilderConfiguration<BuildServerSchema>): Observable<BuildEvent>{
+
+        this.context.logger.error(tags.oneLine`invoked`);
         return of({ success: true })
     }
     constructor(public context: BuilderContext) { }
