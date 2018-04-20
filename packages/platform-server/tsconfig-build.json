@@ -1,0 +1,24 @@
+{
+  "extends": "../tsconfig-build.json",
+
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+    },
+    "outDir": "../../dist/packages/platform-server"
+  },
+
+  "files": [
+    "public_api.ts"
+  ],
+
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": true,
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "flatModuleOutFile": "platform-server.js",
+    "flatModuleId": "@tdadmin/platform-server"
+  }
+}

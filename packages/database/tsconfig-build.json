@@ -1,0 +1,25 @@
+{
+    "extends": "../tsconfig-build.json",
+  
+    "compilerOptions": {
+      "baseUrl": ".",
+      "rootDir": ".",
+      "paths": {
+        "@angular/core": ["../../dist/packages/core"],
+        "mongodb": ["../../node_modules/@types/mongodb"]
+      },
+      "outDir": "../../dist/packages/database"
+    },
+  
+    "files": [
+      "public_api.ts"
+    ],
+  
+    "angularCompilerOptions": {
+      "annotateForClosureCompiler": true,
+      "strictMetadataEmit": false,
+      "skipTemplateCodegen": true,
+      "flatModuleOutFile": "database.js",
+      "flatModuleId": "@tdadmin/database"
+    }
+  }

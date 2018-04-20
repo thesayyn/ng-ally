@@ -1,0 +1,24 @@
+{
+  "extends": "../tsconfig-build.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "inlineSources": true,
+    "strictNullChecks": true,
+    "target": "es2016",
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "baseUrl": ".",
+    "rootDir": ".",
+    "declaration": true,
+    "paths": {
+      "rxjs/*": ["../../node_modules/rxjs/*"]
+    },
+    "outDir": "../../dist/packages/devkit"
+  },
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": false,
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "skipMetadataEmit": true
+  }
+}

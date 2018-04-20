@@ -1,0 +1,25 @@
+{
+  "extends": "../tsconfig-build.json",
+
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@tdadmin/platform-server": ["../../dist/packages/platform-server"]
+    },
+    "outDir": "../../dist/packages/router"
+  },
+
+  "files": [
+    "public_api.ts"
+  ],
+
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": true,
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "flatModuleOutFile": "router.js",
+    "flatModuleId": "@tdadmin/router"
+  }
+}

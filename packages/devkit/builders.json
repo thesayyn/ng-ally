@@ -1,0 +1,15 @@
+{
+    "$schema": "@angular-devkit/architect/src/builders-schema.json",
+    "builders": {
+      "dev-server": {
+        "class": "./src/dev-server",
+        "schema": "./src/dev-server/schema.json",
+        "description": "Serve a server app."
+      },
+      "build": {
+        "class": "./src/build",
+        "schema": "./src/biuld/schema.json",
+        "description": "Build a server app."
+      }
+    }
+  }
