@@ -2,7 +2,28 @@
   "title": "Karma Target",
   "description": "Karma target options for Build Facade.",
   "type": "object",
-  "properties": { },
-  "additionalProperties": true,
-  "required": [ ]
+  "properties": { 
+    "main": {
+      "type": "string",
+      "description": "The name of the main entry-point file."
+    },
+    "polyfills": {
+      "type": "string",
+      "description": "The name of the polyfills file."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The name of the TypeScript configuration file."
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Path where output will be placed."
+    }
+  },
+  "additionalProperties": false,
+  "required": [ 
+    "outputPath",
+    "main",
+    "tsConfig"
+  ]
 }

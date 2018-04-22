@@ -13,6 +13,9 @@
     "paths": {
       "rxjs/*": ["../../node_modules/rxjs/*"]
     },
+    "types": [
+      "node"
+    ],
     "outDir": "../../dist/packages/devkit"
   },
   "angularCompilerOptions": {

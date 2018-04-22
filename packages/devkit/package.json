@@ -1,5 +1,11 @@
 {
     "name": "@tdadmin/devkit",
     "version": "0.0.0-PLACEHOLDER",
-    "builders": "builders.json"
+    "builders": "builders.json",
+    "dependencies": {
+        "ts-loader": "^4.2.0",
+        "awesome-typescript-loader": "^5.0.0",
+        "string-entry-webpack-plugin": "^1.0.0",
+        "xmlhttprequest": "^1.8.0"
+    }
 }
