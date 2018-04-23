@@ -16,6 +16,11 @@
         "type": "string",
         "description": "Host to listen on.",
         "default": "localhost"
+      },
+      "preserveSymlinks": {
+        "type": "boolean",
+        "description": "Do not use the real path when resolving modules.",
+        "default": false
       }
     },
     "additionalProperties": false,

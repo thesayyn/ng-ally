@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import * as path from 'path';
 import * as ts from "typescript";
 import * as webpack from "webpack";
+import { AngularCompilerPlugin, PLATFORM } from '@ngtools/webpack'
 
 import * as StringEntryPlugin from "string-entry-webpack-plugin";
 
@@ -18,15 +19,10 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
         return new Observable( observer => {
             const options = builderConfig.options;
             const root = this.context.workspace.root;
-    
-            this.context.logger.info('Project root path : '+ getSystemPath(root))
-
-            if(options.watch) this.context.logger.info('Bundling app with watch mode.');
-
             const config = this.buildWebpackConfig(root, builderConfig.options);
         
             const compiler = webpack(config)
-                
+
             const callback = (err, stats) => {
                 if (err) this.context.logger.error(err.message);
                 
@@ -37,7 +33,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
                 }
                 if(stats.hasErrors())
                 {
-                    this.context.logger.warn(statsJson.errors.map((error: any) => `ERROR in ${error}`).join('\n\n'));
+                    this.context.logger.error(statsJson.errors.map((error: any) => `ERROR in ${error}`).join('\n\n'));
                 }
 
                 
@@ -82,7 +78,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
             entry: {
                 main: getSystemPath(normalize(resolve(root, normalize(options.main)))),
                 polyfills: getSystemPath(normalize(resolve(root, normalize(options.polyfills!))))
-             },
+            },
             output: {
                 path:  getSystemPath(normalize(resolve(root, normalize(options.outputPath)))),
                 filename: '[name].js',
@@ -93,20 +89,29 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
             },
             module: {
                 rules: [
-                    {
+                  /*  {
                         test: /\.ts$/,
                         loader: 'awesome-typescript-loader',
                         options: {
-                            configFileName: getSystemPath(normalize(resolve(root, normalize(options.tsConfig))))
+                            configFileName: getSystemPath(normalize(resolve(root, normalize(options.tsConfig)))),
+                            silent: true
                         }
+                    }*/
+                    {
+                        test: /\.ts$/,
+                        loader: '@ngtools/webpack'
                     }
                 ]
             },
             plugins: [
+                new AngularCompilerPlugin({
+                    tsConfigPath: getSystemPath(normalize(resolve(root, normalize(options.tsConfig)))),
+                    mainPath: getSystemPath(normalize(resolve(root, normalize(options.main)))),
+                    skipCodeGeneration: true,
+                    platform: PLATFORM.Server
+                }),
                 new StringEntryPlugin({
-                    'server.js': `global['XMLHttpRequest'] = require('xmlhttprequest').XMLHttpRequest;
-                    require('./polyfills');
-                    require('./main');`
+                    'server.js': `global['XMLHttpRequest'] = require('xmlhttprequest').XMLHttpRequest;require('./polyfills');require('./main');`
                 })
             ]
         };
