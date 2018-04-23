@@ -1,6 +1,9 @@
-export interface BuildServerSchema {
-    tsConfig: string;
-    outputPath: string;
-    polyfills?: string;
-    main: string;
-  }
+export interface ServerBuilderSchema {
+  tsConfig: string;
+  outputPath: string;
+  polyfills?: string;
+  main: string;
+
+  preserveSymlinks: boolean;
+  watch: boolean;
+}

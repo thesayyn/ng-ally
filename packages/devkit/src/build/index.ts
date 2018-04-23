@@ -7,86 +7,111 @@ import * as webpack from "webpack";
 
 import * as StringEntryPlugin from "string-entry-webpack-plugin";
 
-import { BuildServerSchema } from './schema';
+import { ServerBuilderSchema } from './schema';
   
-export class DevServerBuilder implements Builder<BuildServerSchema> {
+export class ServerBuilder implements Builder<ServerBuilderSchema> {
 
-    run(builderConfig: BuilderConfiguration<BuildServerSchema>): Observable<BuildEvent>{
+    constructor(public context: BuilderContext) { }
+
+    run(builderConfig: BuilderConfiguration<ServerBuilderSchema>): Observable<BuildEvent>{
+
         return new Observable( observer => {
             const options = builderConfig.options;
             const root = this.context.workspace.root;
-           /* const tsConfigPath = getSystemPath(normalize(resolve(root, normalize(options.tsConfig))));
-            const tsConfigResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile ).config !;
-            const tsConfig = ts.parseJsonConfigFileContent( tsConfigResult, ts.sys,  path.dirname(tsConfigPath), undefined, tsConfigPath);
-            const program = ts.createProgram(tsConfig.fileNames, tsConfig.options);
-            const emitResult = program.emit();*/
     
             this.context.logger.info('Project root path : '+ getSystemPath(root))
-            const config: webpack.Configuration = {
-                context: getSystemPath(root),
-                entry: {
-                   main: getSystemPath(normalize(resolve(root, normalize(options.main)))),
-                   polyfills: getSystemPath(normalize(resolve(root, normalize(options.polyfills!))))
-                },
-                mode: 'development',
-                devtool: false,
-                output: {
-                    path:  getSystemPath(normalize(resolve(root, normalize(options.outputPath)))),
-                    filename: '[name].js',
-                },
-                target: 'node',
-                resolve: {
-                    extensions: ['.ts', '.js']
-                },
-                module: {
-                    rules: [
-                        {
-                            test: /\.ts$/,
-                            loader: 'awesome-typescript-loader',
-                            options: {
-                                configFileName: getSystemPath(normalize(resolve(root, normalize(options.tsConfig))))
-                            }
-                        }
-                    ]
-                },
-                plugins: [
-                    new StringEntryPlugin({
-                        'server.js': `global['XMLHttpRequest'] = require('xmlhttprequest').XMLHttpRequest;
-                        require('./polyfills');
-                        require('./main');`
-                    })
-                ]
-              };
-    
-              const compiler = webpack(config)
-              const callback: webpack.compiler.CompilerCallback = (err, stats) => {
-                if (err) {
-                  return this.context.logger.error(err.message);
+
+            if(options.watch) this.context.logger.info('Bundling app with watch mode.');
+
+            const config = this.buildWebpackConfig(root, builderConfig.options);
+        
+            const compiler = webpack(config)
+                
+            const callback = (err, stats) => {
+                if (err) this.context.logger.error(err.message);
+                
+                const statsJson = stats.toJson();
+                if(stats.hasWarnings())
+                {
+                    //this.context.logger.warn(statsJson.warnings.map((warning: any) => `WARNING in ${warning}`).join('\n\n'));
                 }
-                this.context.logger.info('dsadsad');
-                observer.next({ success: true });
-    
-                this.context.logger.warn(stats.toString());
-              };
-    
-              try {
+                if(stats.hasErrors())
+                {
+                    this.context.logger.warn(statsJson.errors.map((error: any) => `ERROR in ${error}`).join('\n\n'));
+                }
+
+                
+
+                if(options.watch)
+                {
+                    observer.next({ success: !stats.hasErrors() });
+                    return;
+                }
+                else
+                {
+                    observer.next({ success: !stats.hasErrors() });
+                    observer.complete();
+                }
+            };
+
+            if(options.watch)
+            {
+                const watching = compiler.watch({}, callback);
+                return () => watching.close(()=> {});
+            }
+            else
+            {
                 compiler.run(callback);
-              } catch (err) {
-                if (err) {
-                  this.context.logger.error(
-                    '\nAn error occured during the build:\n' + ((err && err.stack) || err));
-                }
-                throw err;
-              }
-              
-    
-              this.context.logger.error('wewew');
+            }
 
         })
     }
-    constructor(public context: BuilderContext) { }
-    
-  
+
+
+    buildWebpackConfig(root: Path, options: ServerBuilderSchema): webpack.Configuration
+    {
+       return {
+            context: getSystemPath(root),
+            mode: 'development',
+            devtool: false,
+            target: 'node',
+            watch: options.watch,
+            watchOptions: {
+                poll: 100,
+            },
+            entry: {
+                main: getSystemPath(normalize(resolve(root, normalize(options.main)))),
+                polyfills: getSystemPath(normalize(resolve(root, normalize(options.polyfills!))))
+             },
+            output: {
+                path:  getSystemPath(normalize(resolve(root, normalize(options.outputPath)))),
+                filename: '[name].js',
+            },
+            resolve: {
+                extensions: ['.ts', '.js'],
+                symlinks: options.preserveSymlinks!
+            },
+            module: {
+                rules: [
+                    {
+                        test: /\.ts$/,
+                        loader: 'awesome-typescript-loader',
+                        options: {
+                            configFileName: getSystemPath(normalize(resolve(root, normalize(options.tsConfig))))
+                        }
+                    }
+                ]
+            },
+            plugins: [
+                new StringEntryPlugin({
+                    'server.js': `global['XMLHttpRequest'] = require('xmlhttprequest').XMLHttpRequest;
+                    require('./polyfills');
+                    require('./main');`
+                })
+            ]
+        };
+
+    }
 }
 
-export default DevServerBuilder;
+export default ServerBuilder;

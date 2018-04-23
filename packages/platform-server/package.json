@@ -10,6 +10,6 @@
         "xmlhttprequest": "latest"
     },
     "peerDependencies": {
-        "@angular/core": "0.0.0-PLACEHOLDER"
+        "@angular/core": "^6.0.0-rc.1"
     }
 }
