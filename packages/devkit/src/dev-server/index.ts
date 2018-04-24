@@ -36,13 +36,11 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
                 const outFile = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath+'/server.js'))))
                 
                 if(process && !process.killed) process.kill();
-                process = spawn('node', [outFile]);
-                process.on('message', data => {
-                    this.context.logger.info(data);
+                process = spawn('node', [outFile], {stdio: 'inherit'});
+                process.on('exit', (code,signal)=>{
+                    this.context.logger.info(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
                 })
-                process.on('error', error => {
-                    this.context.logger.error(error.message);
-                })
+                
 
                 if(first)
                 {
