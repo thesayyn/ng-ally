@@ -10,7 +10,6 @@ import { getZone } from "./zone";
 import { RouterErrorHandlingStrategy } from "./router_error_handler";
 
 
-@Injectable()
 export class Router{
 
     private rootRouter: ɵRouter;
@@ -23,7 +22,6 @@ export class Router{
         private _injector: Injector, 
         private _zone: NgZone,
         private _errorHandler: RouterErrorHandlingStrategy,
-        private _console: Console,
         private _options: ExtraOptions){
 
         this.resetConfig();

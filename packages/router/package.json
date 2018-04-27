@@ -1,7 +1,6 @@
 {
     "name": "@tdadmin/router",
     "version": "0.0.0-PLACEHOLDER",
-    "main": "./bundles/router.umd.js",
     "module": "./esm5/router.js",
     "es2015": "./esm2015/router.js",
     "typings": "./router.d.ts",

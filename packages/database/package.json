@@ -1,7 +1,6 @@
 {
     "name": "@tdadmin/database",
     "version": "0.0.0-PLACEHOLDER",
-    "main": "./bundles/database.umd.js",
     "module": "./esm5/database.js",
     "es2015": "./esm2015/database.js",
     "typings": "./database.d.ts",

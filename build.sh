@@ -123,7 +123,7 @@ rollupIndex() {
   BANNER_TEXT=`cat ${LICENSE_BANNER}`
   if [[ -f ${in_file} ]]; then
     echo "===========           $ROLLUP -i ${in_file} -o ${out_file} --sourcemap -f es --banner BANNER_TEXT >/dev/null 2>&1"
-    $ROLLUP -i ${in_file} -o ${out_file} --sourcemap -f es --banner "$BANNER_TEXT" >/dev/null 2>&1
+    $ROLLUP -i ${in_file} -o ${out_file} --sourcemap -f es --banner "$BANNER_TEXT" #>/dev/null 2>&1
   fi
 
   # Recurse for sub directories
@@ -150,7 +150,7 @@ runRollup() {
     cd ${1}
 
     echo "======           $ROLLUP -c ${1}/rollup.config.js --sourcemap"
-    $ROLLUP -c rollup.config.js --sourcemap #>/dev/null 2>&1
+    $ROLLUP -c rollup.config.js --sourcemap >/dev/null 2>&1
 
     # Recurse for sub directories
     for DIR in ${1}/* ; do
@@ -382,16 +382,16 @@ do
         echo "======         Copy ESM2015 for ${PACKAGE}"
         rsync -a --exclude="locale/**" --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR}/ ${ESM2015_DIR}
 
-        echo "======         Rollup ${PACKAGE}"
-        rollupIndex ${OUT_DIR} ${FESM2015_DIR} ${PACKAGE}
+        #echo "======         Rollup ${PACKAGE}"
+        #rollupIndex ${OUT_DIR} ${FESM2015_DIR} ${PACKAGE}
 
         echo "======         Produce ESM5 version"
         compilePackageES5 ${SRC_DIR} ${OUT_DIR_ESM5} ${PACKAGE}
         rsync -a --exclude="locale/**" --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR_ESM5}/ ${ESM5_DIR}
-        rollupIndex ${OUT_DIR_ESM5} ${FESM5_DIR} ${PACKAGE}
+        #rollupIndex ${OUT_DIR_ESM5} ${FESM5_DIR} ${PACKAGE}
 
-        echo "======         Run rollup conversions on ${PACKAGE}"
-        runRollup ${SRC_DIR}
+        #echo "======         Run rollup conversions on ${PACKAGE}"
+        #runRollup ${SRC_DIR}
         addBanners ${BUNDLES_DIR}
         minify ${BUNDLES_DIR}
 

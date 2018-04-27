@@ -1,4 +1,5 @@
 export interface ServerBuilderSchema {
+  assets: AssetPattern[];
   tsConfig: string;
   outputPath: string;
   polyfills?: string;
@@ -6,4 +7,10 @@ export interface ServerBuilderSchema {
 
   preserveSymlinks: boolean;
   watch: boolean;
+}
+
+export interface AssetPattern {
+  glob: string;
+  input: string;
+  output: string;
 }

@@ -1,10 +1,11 @@
-import { NgModule, ModuleWithProviders, APP_INITIALIZER, InjectionToken, APP_BOOTSTRAP_LISTENER, NgZone, Injector, Inject, Optional, Type, ɵConsole as Console } from '@angular/core'
-import { Routes, Route, ROUTES, ROUTER_GUARDS, ExtraOptions, EXTRA_OPTIONS } from './config';
-import { RouterInitializer } from './router_initializer';
-import { RouterErrorHandlingStrategy, ROUTER_ERROR_HANDLER, DefaultRouterErrorHandler, SendThroughResponseStrategy, ReportToErrorHandlerStrategy } from "./router_error_handler";
+import { Inject, Injector, ModuleWithProviders, NgModule, NgZone, Optional, Type, InjectionToken, APP_INITIALIZER, APP_BOOTSTRAP_LISTENER } from '@angular/core';
+import { EXTRA_OPTIONS, ExtraOptions, ROUTER_GUARDS, ROUTES, Route, Routes } from './config';
 import { Router } from './router';
+import { DefaultRouterErrorHandler, ROUTER_ERROR_HANDLER, ReportToErrorHandlerStrategy, RouterErrorHandlingStrategy, SendThroughResponseStrategy } from "./router_error_handler";
+import { RouterInitializer } from './router_initializer';
 import { flatten } from './utils';
-import { APP_ENDPOINT_LISTENER } from '@tdadmin/platform-server';
+
+
 
 
 @NgModule({})
@@ -22,7 +23,12 @@ export class RouterModule{
                 provide: Router, 
                 useFactory: setupRouter, 
                 deps: [ 
-                    [new Inject(ROUTES)], [new Inject(ROUTER_GUARDS), new Optional()], Injector, NgZone, RouterErrorHandlingStrategy, Console, [new Inject(EXTRA_OPTIONS), new Optional()]
+                    [new Inject(ROUTES)], 
+                    [new Inject(ROUTER_GUARDS), new Optional()], 
+                    Injector, 
+                    NgZone, 
+                    RouterErrorHandlingStrategy, 
+                    [new Inject(EXTRA_OPTIONS), new Optional()]
                 ]
             },
             provideErrorHandlingStrategy(config),
@@ -42,9 +48,9 @@ export class RouterModule{
     }
 }
 
-export const setupRouter = (routes: Route[][], interceptors: Type<any>[],injector: Injector, zone: NgZone, errorHandling: RouterErrorHandlingStrategy, console: Console, options: ExtraOptions): Router =>
+export const setupRouter = (routes: Route[][], interceptors: Type<any>[],injector: Injector, zone: NgZone, errorHandling: RouterErrorHandlingStrategy, options: ExtraOptions): Router =>
 {
-    return (new Router(flatten(routes), interceptors || [] ,injector, zone, errorHandling, console, Object.assign({mergeParams: true},options)))
+    return (new Router(flatten(routes), interceptors || [] ,injector, zone, errorHandling, Object.assign({mergeParams: true},options)))
 }
 
 export function provideRoutes(routes: Routes): any
@@ -53,7 +59,6 @@ export function provideRoutes(routes: Routes): any
         { provide: ROUTES, multi: true, useValue: routes }
     ]
 }
-
 
 export function provideErrorHandlingStrategy(config: ExtraOptions )
 {
@@ -66,9 +71,6 @@ export function provideErrorHandlingStrategy(config: ExtraOptions )
     ]
 }
 
-
-
-
 export function provideDefaultErrorHandler(): any
 {
     return [
@@ -76,29 +78,14 @@ export function provideDefaultErrorHandler(): any
     ]
 }
 
-
-
 export function getAppInitializer(r: RouterInitializer) {
     return r.appInitializer.bind(r);
 }
-  
-export function getBootstrapListener(r: RouterInitializer) {
-    return r.bootstrapListener.bind(r);
-}
-
-export function getEndpointListener(r: RouterInitializer) {
-    return r.endpointListener.bind(r);
-}
-
-export const ROUTER_INITIALIZER: InjectionToken<any> = new InjectionToken<any>('Router Initializer');
 
 export function provideRouterInitializer(): any
 {
     return [
         RouterInitializer,
-        { provide: APP_ENDPOINT_LISTENER, multi: true, useFactory: getEndpointListener,  deps: [RouterInitializer] },
-        { provide: APP_INITIALIZER, multi: true, useFactory: getAppInitializer, deps: [RouterInitializer] },
-        { provide: ROUTER_INITIALIZER, useFactory: getBootstrapListener, deps: [RouterInitializer]},
-        { provide: APP_BOOTSTRAP_LISTENER, multi: true, useExisting: ROUTER_INITIALIZER}
+        { provide: APP_INITIALIZER, multi: true, useFactory: getAppInitializer , deps: [ RouterInitializer ] },
     ]
 }

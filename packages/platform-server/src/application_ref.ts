@@ -1,26 +1,25 @@
-import { Injectable, APP_BOOTSTRAP_LISTENER, Injector } from "@angular/core";
-import express from 'express'
-import { APP_PORT, APP_ENDPOINT_LISTENER, APP_HOST } from "./application_tokens";
+import { Injectable, Injector, APP_BOOTSTRAP_LISTENER } from "@angular/core";
+import { APP_PORT, APP_HOST, EXPRESS_APP, HTTP_SERVER } from "./application_tokens";
 
 @Injectable()
 export class ServerApplicationRef {
 
-  app : express.Express; 
+  constructor(private injector: Injector) {
 
-  constructor(private _injector: Injector) {
-    this.app = express();
-    this.app.use((req,res,next) => _injector.get(APP_ENDPOINT_LISTENER, []).forEach( listener => listener(req,res,next)));
-    this.app.listen(_injector.get<number>(APP_PORT, 3100), _injector.get<string>(APP_HOST, 'localhost'));
-
-    this._injector.get(APP_BOOTSTRAP_LISTENER, []).forEach(listener => {
-      listener.call(listener,null);
-    });
-   
+    const app = injector.get(EXPRESS_APP);
 
     
+    const port = injector.get(APP_PORT, 3100),
+          host = injector.get(APP_HOST, '0.0.0.0')
+    const http = injector.get(HTTP_SERVER);
 
+    http.listen({host,port},()=>{
+
+      this.injector.get(APP_BOOTSTRAP_LISTENER as any, []).forEach( l => l());
+      console.log(`Application started running on ${host}:${port} `);
+    });
+    http.on("error", e => {
+      throw e;
+    })
   }
-
-
-
 }

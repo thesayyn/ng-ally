@@ -5,6 +5,7 @@ import { concatMap, map, tap } from 'rxjs/operators'
 import { ChildProcess, spawn } from 'child_process';
 import { ServerBuilderSchema } from '../build/schema';
 import { ServerBuilder } from '../build';
+import chalk from 'chalk'
 
 export interface DevServerBuilderOptions {
     buildTarget: string;
@@ -34,20 +35,26 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
             concatMap( (cfg: any) => serverBuilder.run(cfg) ),
             map( event => {
                 const outFile = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath+'/server.js'))))
-                
-                if(process && !process.killed) process.kill();
-                process = spawn('node', [outFile], {stdio: 'inherit'});
+                const cwd = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath))))
+                let killingServer = false;
+                if(process && !process.killed){
+                    killingServer = true;
+                    process.kill();
+            
+                }
+                process = spawn('node', ['-r','source-map-support/register',outFile], {stdio: 'inherit', cwd: cwd});
                 process.on('exit', (code,signal)=>{
-                    this.context.logger.info(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
+                   if(!killingServer) this.context.logger.error(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
+                   killingServer = false;
                 })
                 
 
                 if(first)
                 {
-                    this.context.logger.info('Server started.');
+                    this.context.logger.info(chalk.italic('🎉 Server started.'));
                     first = false;
                 }else{
-                    this.context.logger.info('Bundle changed restarting server...');
+                    this.context.logger.info(chalk.bold('Bundle changed restarting server.'));
                 }
                 
                 
