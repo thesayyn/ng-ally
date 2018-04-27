@@ -10,6 +10,9 @@
         "socket.io": "^2.1.0",
         "uws": "^9.148.0"
     },
+    "devDependencies": {
+        "@types/socket.io": "^4.1.4"
+    },
     "peerDependencies": {
         "@angular/core": "^6.0.0-rc.5"
     }
