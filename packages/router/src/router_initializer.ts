@@ -1,5 +1,5 @@
 import { Injectable, Injector, NgModuleRef } from "@angular/core";
-import { EXPRESS_APP } from "@tdadmin/platform-server";
+import { EXPRESS_APP } from "@ng-ally/platform-server";
 
 import { Router } from "./router";
 

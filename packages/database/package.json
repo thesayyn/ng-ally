@@ -1,14 +1,9 @@
 {
-    "name": "@tdadmin/database",
+    "name": "@ng-ally/database",
     "version": "0.0.0-PLACEHOLDER",
     "module": "./esm5/database.js",
     "es2015": "./esm2015/database.js",
     "typings": "./database.d.ts",
-    "author": {
-        "url": "https://teknodev.biz",
-        "name": "TeknoDEV",
-        "email": "info@teknodev.biz"
-    },
     "dependencies": {
         "mongodb": "3.0.5"
     }

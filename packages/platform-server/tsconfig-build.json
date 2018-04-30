@@ -19,6 +19,6 @@
     "strictMetadataEmit": false,
     "skipTemplateCodegen": true,
     "flatModuleOutFile": "platform-server.js",
-    "flatModuleId": "@tdadmin/platform-server"
+    "flatModuleId": "@ng-ally/platform-server"
   }
 }

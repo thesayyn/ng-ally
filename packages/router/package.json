@@ -1,16 +1,11 @@
 {
-    "name": "@tdadmin/router",
+    "name": "@ng-ally/router",
     "version": "0.0.0-PLACEHOLDER",
     "module": "./esm5/router.js",
     "es2015": "./esm2015/router.js",
     "typings": "./router.d.ts",
-    "author": {
-        "url": "https://teknodev.biz",
-        "name": "TeknoDEV",
-        "email": "info@teknodev.biz"
-    },
     "peerDependencies": {
-        "@tdadmin/platform-server": "0.0.0-PLACEHOLDER"
+        "@ng-ally/platform-server": "0.0.0-PLACEHOLDER"
     },
     "dependencies": {
         "@types/express": "^4.11.1"

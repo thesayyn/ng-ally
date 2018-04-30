@@ -20,6 +20,6 @@
       "strictMetadataEmit": false,
       "skipTemplateCodegen": true,
       "flatModuleOutFile": "database.js",
-      "flatModuleId": "@tdadmin/database"
+      "flatModuleId": "@ng-ally/database"
     }
   }

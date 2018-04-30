@@ -1,5 +1,5 @@
 {
-    "name": "@tdadmin/devkit",
+    "name": "@ng-ally/devkit",
     "version": "0.0.0-PLACEHOLDER",
     "builders": "builders.json",
     "dependencies": {

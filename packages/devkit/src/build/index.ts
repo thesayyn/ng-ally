@@ -8,8 +8,6 @@ import { AngularCompilerPlugin, PLATFORM } from '@ngtools/webpack';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as StringEntryPlugin from "string-entry-webpack-plugin";
 import * as WebpackNodeExternals from "webpack-node-externals";
-import * as WebpackAngularExternals from "webpack-angular-externals";
-import * as WebpackRxjsExternals from "webpack-rxjs-externals";
 import { ServerBuilderSchema, AssetPattern } from './schema';
 import { statsToString } from './utilities';
   
@@ -140,7 +138,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
                 WebpackNodeExternals({
                     whitelist: [
                         /@angular\/.*/,
-                        /@tdadmin\/.*/,
+                        /@ng-ally\/.*/,
                         /^rxjs\/.*/
                     ]
                 }),

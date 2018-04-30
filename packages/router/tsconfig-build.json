@@ -6,7 +6,7 @@
     "rootDir": ".",
     "emitDecoratorMetadata": true,
     "paths": {
-      "@tdadmin/platform-server": ["../../dist/packages/platform-server"]
+      "@ng-ally/platform-server": ["../../dist/packages/platform-server"]
     },
     "outDir": "../../dist/packages/router"
   },
@@ -20,6 +20,6 @@
     "strictMetadataEmit": false,
     "skipTemplateCodegen": true,
     "flatModuleOutFile": "router.js",
-    "flatModuleId": "@tdadmin/router"
+    "flatModuleId": "@ng-ally/router"
   }
 }

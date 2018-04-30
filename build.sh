@@ -10,15 +10,13 @@ cd ${currentDir}
 PACKAGES=(
   platform-server
   router
-  database)
+  database
+  devkit
+  )
 
 TSC_PACKAGES=(null)
 
 NODE_PACKAGES=(devkit)
-
-SCOPED_PACKAGES=$(
-  for P in ${PACKAGES[@]}; do echo \\@tdadmin/${P}; done
-)
 
 
 

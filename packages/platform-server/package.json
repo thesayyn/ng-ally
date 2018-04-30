@@ -1,5 +1,5 @@
 {
-    "name": "@tdadmin/platform-server",
+    "name": "@ng-ally/platform-server",
     "version": "0.0.0-PLACEHOLDER",
     "module": "./esm5/platform-server.js",
     "es2015": "./esm2015/platform-server.js",
