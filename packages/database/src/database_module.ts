@@ -1,15 +1,11 @@
 import { NgModule, ModuleWithProviders, APP_INITIALIZER, Injector, InjectionToken, APP_BOOTSTRAP_LISTENER } from '@angular/core'
 import { MongoClient, Db } from 'mongodb'
-import { DatabaseConfig, DATABASE_CONFIG, DATABASE, DATABASE_INITIALIZER } from './config';
+import { DatabaseConfig, DATABASE_CONFIG } from './config';
 import { DatabaseService } from './database_service';
 import { DatabaseInitializer } from './database_initializer';
 
 
-@NgModule({
-    providers:[
-        { provide: DatabaseService, useClass: DatabaseService, deps: [DATABASE] }
-    ]
-})
+@NgModule({})
 export class DatabaseModule{
     static withConnection(config: DatabaseConfig): ModuleWithProviders
     {
@@ -17,39 +13,20 @@ export class DatabaseModule{
             ngModule: DatabaseModule,
             providers: [
                 DatabaseInitializer,
-                {provide: DATABASE_CONFIG, useValue: config},
-                {provide: DATABASE, useFactory: getDatabase, deps:[ DATABASE_CONFIG ]},
-                {provide: DATABASE_INITIALIZER, useFactory: getBootstrapListener, deps: [DatabaseInitializer] },
-                {provide: APP_BOOTSTRAP_LISTENER, multi: true, useExisting: DATABASE_INITIALIZER}
+                { provide: DATABASE_CONFIG, useValue: config },
+                { provide: DatabaseService, useFactory: getDatabase, deps: [ DatabaseInitializer ] },
+                { provide: APP_INITIALIZER, multi: true, useFactory: getDatabaseInitializer,  deps: [ DatabaseInitializer ] },
             ]
         }
     }
 }
-
-export function getBootstrapListener(d: DatabaseInitializer) {
-    return d.bootstrapListener.bind(d);
+export function getDatabaseInitializer(d: DatabaseInitializer) {
+    return d.databaseInitializer.bind(d);
 }
 
-
-
-/**
- * @noDocsRequired
- * @experimental
- */
-export async function getDatabase(config: DatabaseConfig): Promise<Db>
-{
-    let uri = 'mongodb://';
-    if('username' in config && 'password' in config)
-    {
-        uri+= `${config.username!}:${config.password!}`;
-    }
-    config.port = config.port || 27017;
-    uri+= `${config.host!}:${config.port!}/${config.database!}`;
-
-
-	return MongoClient.connect(uri).then(client => {
-		return client.db(config.database)!;
-	});
+export function getDatabase(d: DatabaseInitializer) {
+    return d.getDatabaseInstance()
 }
+
 
 

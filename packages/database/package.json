@@ -5,6 +5,7 @@
     "es2015": "./esm2015/database.js",
     "typings": "./database.d.ts",
     "dependencies": {
-        "mongodb": "3.0.5"
+        "mongodb": "3.0.5",
+        "@types/mongodb": "^3.0.15"
     }
 }

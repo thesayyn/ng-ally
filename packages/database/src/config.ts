@@ -11,7 +11,3 @@ export interface DatabaseConfig{
 }
 
 export const DATABASE_CONFIG = new InjectionToken<DatabaseConfig>('Database config.');
-
-export const DATABASE = new InjectionToken<Promise<Db>>('Database connection.');
-
-export const DATABASE_INITIALIZER = new InjectionToken<any>('Database Initializer');
