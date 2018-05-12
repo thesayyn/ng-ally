@@ -9,6 +9,15 @@
     "@angular-devkit/core" "0.5.9"
     rxjs "^6.0.0-beta.3"
 
+"@angular-devkit/core@0.5.13":
+  version "0.5.13"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-0.5.13.tgz#c48c83c1bf38917e6af3f399d221d29466be9677"
+  dependencies:
+    ajv "~6.4.0"
+    chokidar "^2.0.3"
+    rxjs "^6.0.0"
+    source-map "^0.5.6"
+
 "@angular-devkit/core@0.5.9", "@angular-devkit/core@^0.5.7":
   version "0.5.9"
   resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-0.5.9.tgz#3041e5084628868d95e94352f300ab3e3839b264"
@@ -17,6 +26,13 @@
     chokidar "^1.7.0"
     rxjs "^6.0.0-beta.3"
     source-map "^0.5.6"
+
+"@angular-devkit/schematics@^0.5.7":
+  version "0.5.13"
+  resolved "https://registry.yarnpkg.com/@angular-devkit/schematics/-/schematics-0.5.13.tgz#be90657c668cddae4054645a61d4cf852de51ede"
+  dependencies:
+    "@angular-devkit/core" "0.5.13"
+    rxjs "^6.0.0"
 
 "@angular/compiler-cli@^6.0.0-beta.8":
   version "6.0.0-rc.5"
@@ -144,9 +160,18 @@
   dependencies:
     source-map "^0.6.1"
 
-"@types/webpack@*", "@types/webpack@^2.6.1":
+"@types/webpack@*":
   version "4.1.4"
   resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.1.4.tgz#553fe3f7ac1d8b403ebb01f25b31272b234d5ef6"
+  dependencies:
+    "@types/node" "*"
+    "@types/tapable" "*"
+    "@types/uglify-js" "*"
+    source-map "^0.6.0"
+
+"@types/webpack@^2.6.1":
+  version "4.1.6"
+  resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.1.6.tgz#9bc7951d107c2b99343356f7af134e645a427879"
   dependencies:
     "@types/node" "*"
     "@types/tapable" "*"
@@ -594,7 +619,7 @@ chokidar@^1.4.2, chokidar@^1.7.0:
   optionalDependencies:
     fsevents "^1.0.0"
 
-chokidar@^2.0.2:
+chokidar@^2.0.2, chokidar@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-2.0.3.tgz#dcbd4f6cbb2a55b4799ba8a840ac527e5f4b1176"
   dependencies:
@@ -2541,6 +2566,12 @@ run-queue@^1.0.0, run-queue@^1.0.3:
   resolved "https://registry.yarnpkg.com/run-queue/-/run-queue-1.0.3.tgz#e848396f057d223f24386924618e25694161ec47"
   dependencies:
     aproba "^1.1.1"
+
+rxjs@^6.0.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.1.0.tgz#833447de4e4f6427b9cec3e5eb9f56415cd28315"
+  dependencies:
+    tslib "^1.9.0"
 
 rxjs@^6.0.0-beta.3, rxjs@^6.0.0-rc.0:
   version "6.0.0"

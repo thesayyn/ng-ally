@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsAngularApp",
+  "title": "Angular Application Options Schema",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "The root directory of the new application.",
+      "type": "string",
+      "visible": false
+    },
+    "name": {
+      "description": "The name of the application.",
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    }
+  },
+  "required": []
+}

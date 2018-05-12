@@ -99,64 +99,6 @@ containsElement () {
   return 1
 }
 
-#######################################
-# Rollup index files recursively, ignoring blacklisted directories
-# Arguments:
-#   param1 - Base source folder
-#   param2 - Destination directory
-#   param3 - Package name
-#   param4 - Is sub directory
-# Returns:
-#   None
-#######################################
-rollupIndex() {
-  # Iterate over the files in this directory, rolling up each into ${2} directory
-  in_file="${1}/${3}.js"
-  if [ ${4:-} ]; then
-    out_file="$(dropLast ${2})/${3}.js"
-  else
-    out_file="${2}/${3}.js"
-  fi
-
-  BANNER_TEXT=`cat ${LICENSE_BANNER}`
-  if [[ -f ${in_file} ]]; then
-    echo "===========           $ROLLUP -i ${in_file} -o ${out_file} --sourcemap -f es --banner BANNER_TEXT >/dev/null 2>&1"
-    $ROLLUP -i ${in_file} -o ${out_file} --sourcemap -f es --banner "$BANNER_TEXT" #>/dev/null 2>&1
-  fi
-
-  # Recurse for sub directories
-  for DIR in ${1}/* ; do
-    local sub_package=$(basename "${DIR}")
-    isIgnoredDirectory ${DIR} && continue
-    local regex=".+/(.+)/${sub_package}.js"
-    if [[ "${DIR}/${sub_package}.js" =~ $regex ]]; then
-
-      rollupIndex ${DIR} ${2}/${BASH_REMATCH[1]} ${sub_package} true
-    fi
-  done
-}
-
-#######################################
-# Recursively runs rollup on any entry point that has a "rollup.config.js" file
-# Arguments:
-#   param1 - Base source folder containing rollup.config.js
-# Returns:
-#   None
-#######################################
-runRollup() {
-  if [[ -f "${1}/rollup.config.js" ]]; then
-    cd ${1}
-
-    echo "======           $ROLLUP -c ${1}/rollup.config.js --sourcemap"
-    $ROLLUP -c rollup.config.js --sourcemap >/dev/null 2>&1
-
-    # Recurse for sub directories
-    for DIR in ${1}/* ; do
-      isIgnoredDirectory ${DIR} && continue
-      runRollup ${DIR}
-    done
-  fi
-}
 
 #######################################
 # Adds banners to all files in a directory
@@ -216,11 +158,6 @@ compilePackage() {
     echo "======      [${3}]: COMPILING: ${NGC} -p ${1}/tsconfig-build.json"
     local package_name=$(basename "${2}")
     $NGC -p ${1}/tsconfig-build.json
-    if [[ "${package_name}" != "locales" ]]; then
-      echo "======           Create ${1}/../${package_name}.d.ts re-export file for tsickle"
-      echo "$(cat ${LICENSE_BANNER}) ${N} export * from './${package_name}/${package_name}'" > ${2}/../${package_name}.d.ts
-      echo "{\"__symbolic\":\"module\",\"version\":3,\"metadata\":{},\"exports\":[{\"from\":\"./${package_name}/${package_name}\"}],\"flatModuleIndexRedirect\":true}" > ${2}/../${package_name}.metadata.json
-    fi
   fi
 
   # Build subpackages
@@ -380,16 +317,10 @@ do
         echo "======         Copy ESM2015 for ${PACKAGE}"
         rsync -a --exclude="locale/**" --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR}/ ${ESM2015_DIR}
 
-        #echo "======         Rollup ${PACKAGE}"
-        #rollupIndex ${OUT_DIR} ${FESM2015_DIR} ${PACKAGE}
-
         echo "======         Produce ESM5 version"
         compilePackageES5 ${SRC_DIR} ${OUT_DIR_ESM5} ${PACKAGE}
         rsync -a --exclude="locale/**" --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR_ESM5}/ ${ESM5_DIR}
-        #rollupIndex ${OUT_DIR_ESM5} ${FESM5_DIR} ${PACKAGE}
 
-        #echo "======         Run rollup conversions on ${PACKAGE}"
-        #runRollup ${SRC_DIR}
         addBanners ${BUNDLES_DIR}
         minify ${BUNDLES_DIR}
 
@@ -400,10 +331,6 @@ do
 
       ) 2>&1 | grep -v "as external dependency"
 
-      if [[ ${PACKAGE} == "common" ]]; then
-        echo "======      Copy i18n locale data"
-        rsync -a ${OUT_DIR}/locales/ ${NPM_DIR}/locales
-      fi
     else
       echo "======        Copy ${PACKAGE} node tool"
       rsync -a ${OUT_DIR}/ ${NPM_DIR}
@@ -415,7 +342,7 @@ do
 
     if [ ${PACKAGE} = "devkit" ]; then
     echo "======        Copy ${PACKAGE}  schema.json and builders.json files"
-      rsync -ar --include="schema.json" --include="builders.json" --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
+      rsync -ar --include="schema.json" --include="builders.json" --include="collection.json" --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
     fi
     
     cp ${ROOT_DIR}/README.md ${NPM_DIR}/

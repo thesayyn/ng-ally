@@ -1,0 +1,9 @@
+{
+    "name": "@ng-ally/devkit/schematics",
+    "version": "0.0.0-PLACEHOLDER",
+    "schematics": "collection.json",
+    "dependencies": {
+        "@angular-devkit/core": "^0.5.7",
+        "@angular-devkit/schematics": "^0.5.7"
+    }
+}
