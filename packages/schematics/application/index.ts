@@ -91,9 +91,9 @@ function addAppToWorkspaceFile(options: ApplicationOptions, workspace: Workspace
         },
       },
       serve: {
-        builder: '@ng-ally/devkit:serve',
+        builder: '@ng-ally/devkit:dev-server',
         options: {
-          browserTarget: `${options.name}:build`,
+          buildTarget: `${options.name}:build`,
         },
         configurations: {
           production: {

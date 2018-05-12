@@ -16,7 +16,10 @@ PACKAGES=(
 
 TSC_PACKAGES=(null)
 
-NODE_PACKAGES=(devkit)
+NODE_PACKAGES=(
+  devkit
+  schematics
+  )
 
 
 
@@ -340,9 +343,10 @@ do
     rsync -am --include="package.json" --include="*/" --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
     rsync -am --include="*.externs.js" --include="*/" --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
 
-    if [ ${PACKAGE} = "devkit" ]; then
+    if [ ${PACKAGE} = "devkit" ] ||  [ ${PACKAGE} = "schematics" ]; then
     echo "======        Copy ${PACKAGE}  schema.json and builders.json files"
       rsync -ar --include="schema.json" --include="builders.json" --include="collection.json" --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
+      rsync -amr --include='**/files/**' --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
     fi
     
     cp ${ROOT_DIR}/README.md ${NPM_DIR}/

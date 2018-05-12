@@ -1,0 +1,28 @@
+{
+  "extends": "../tsconfig-build.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "strictNullChecks": true,
+    "inlineSources": false,
+    "target": "es2016",
+    "baseUrl": ".",
+    "rootDir": ".",
+    "declaration": true,
+    "paths": {
+      "rxjs/*": ["../../node_modules/rxjs/*"]
+    },
+    "types": [
+      "node"
+    ],
+    "outDir": "../../dist/packages/schematics"
+  },
+  "exclude": [
+    "**/files/*"
+  ],
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": false,
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "skipMetadataEmit": true
+  }
+}
