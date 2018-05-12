@@ -6,7 +6,7 @@
     "rootDir": ".",
     "emitDecoratorMetadata": true,
     "paths": {
-      "@ng-ally/platform-server": ["../../dist/packages/platform-server"]
+      "@ng-ally/platform-server": ["../../dist/packages-dist/platform-server"]
     },
     "outDir": "../../dist/packages/router"
   },
