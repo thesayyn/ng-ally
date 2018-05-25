@@ -12,6 +12,7 @@ PACKAGES=(
   router
   database
   devkit
+  schematics
   )
 
 TSC_PACKAGES=(null)

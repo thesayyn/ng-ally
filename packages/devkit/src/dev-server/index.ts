@@ -33,13 +33,15 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
         .pipe(
             tap( (cfg: any) => serverBuilderConfig = cfg.options ),
             concatMap( (cfg: any) => serverBuilder.run(cfg) ),
-            switchMap( event => new Observable( observer => {
+            concatMap( event => new Observable( observer => {
                 const outFile = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath+'/server.js'))))
                 const cwd = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath))))
 
-                if(process && !process.killed) process.kill();
+                try{
+                    process.kill();
+                }catch{}
                 
-                process = spawn('node', ['-r','source-map-support/register',outFile], {stdio: 'inherit', cwd: cwd});
+                process = spawn('node', [ '-r', 'source-map-support/register', outFile ], {stdio: 'inherit', cwd: cwd});
                 process.on('exit', (code,signal)=>{
                    this.context.logger.error(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
                 })
@@ -51,11 +53,13 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
                 }else{
                     this.context.logger.info(chalk.bold('Bundle changed restarting server.'));
                 }
-                
+
                 
                 observer.next(event);
                 return ()=>{
-                    if(process && !process.killed) process.kill();
+                    try{
+                        process.kill();
+                    }catch{}
                 }
             }))
         )
