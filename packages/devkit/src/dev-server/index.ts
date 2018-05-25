@@ -1,7 +1,7 @@
 import { BuildEvent, Builder, BuilderConfiguration, BuilderContext } from '@angular-devkit/architect';
 import { Path, getSystemPath, resolve, tags, virtualFs, normalize } from '@angular-devkit/core';
 import { Observable, of, config } from 'rxjs';
-import { concatMap, map, tap } from 'rxjs/operators'
+import { concatMap, map, tap, switchMap } from 'rxjs/operators'
 import { ChildProcess, spawn } from 'child_process';
 import { ServerBuilderSchema } from '../build/schema';
 import { ServerBuilder } from '../build';
@@ -33,22 +33,17 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
         .pipe(
             tap( (cfg: any) => serverBuilderConfig = cfg.options ),
             concatMap( (cfg: any) => serverBuilder.run(cfg) ),
-            map( event => {
+            switchMap( event => new Observable( observer => {
                 const outFile = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath+'/server.js'))))
                 const cwd = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath))))
-                let killingServer = false;
-                if(process && !process.killed){
-                    killingServer = true;
-                    process.kill();
-            
-                }
+
+                if(process && !process.killed) process.kill();
+                
                 process = spawn('node', ['-r','source-map-support/register',outFile], {stdio: 'inherit', cwd: cwd});
                 process.on('exit', (code,signal)=>{
-                   if(!killingServer) this.context.logger.error(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
-                   killingServer = false;
+                   this.context.logger.error(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
                 })
                 
-
                 if(first)
                 {
                     this.context.logger.info(chalk.italic('🎉 Server started.'));
@@ -58,8 +53,11 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
                 }
                 
                 
-                return event;
-            })
+                observer.next(event);
+                return ()=>{
+                    if(process && !process.killed) process.kill();
+                }
+            }))
         )
     }
 
