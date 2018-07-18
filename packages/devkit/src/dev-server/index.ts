@@ -1,81 +1,104 @@
-import { BuildEvent, Builder, BuilderConfiguration, BuilderContext } from '@angular-devkit/architect';
-import { Path, getSystemPath, resolve, tags, virtualFs, normalize } from '@angular-devkit/core';
-import { Observable, of, config } from 'rxjs';
-import { concatMap, map, tap, switchMap } from 'rxjs/operators'
-import { ChildProcess, spawn } from 'child_process';
-import { ServerBuilderSchema } from '../build/schema';
-import { ServerBuilder } from '../build';
-import chalk from 'chalk'
+import {
+  BuildEvent,
+  Builder,
+  BuilderConfiguration,
+  BuilderContext
+} from "@angular-devkit/architect";
+import {
+  getSystemPath,
+  resolve,
+  normalize
+} from "@angular-devkit/core";
+import { Observable } from "rxjs";
+import { concatMap, map, tap, switchMap } from "rxjs/operators";
+import { ChildProcess, spawn, SpawnOptions } from "child_process";
+import { ServerBuilderSchema } from "../build/schema";
+import { ServerBuilder } from "../build";
+import chalk from "chalk";
 
 export interface DevServerBuilderOptions {
-    buildTarget: string;
-    port: number;
-    host: string;
-    preserveSymlinks: boolean;
+  buildTarget: string;
+  port: number;
+  host: string;
+  preserveSymlinks: boolean;
 }
 
-
 export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
+  constructor(public context: BuilderContext) {}
 
-    constructor(public context: BuilderContext) { }
-    
-  
-    run(builderConfig: BuilderConfiguration<DevServerBuilderOptions>): Observable<BuildEvent>{
-        const options = builderConfig.options;
-        const root = this.context.workspace.root;
+  run(
+    builderConfig: BuilderConfiguration<DevServerBuilderOptions>
+  ): Observable<BuildEvent> {
+    const options = builderConfig.options;
+    const root = this.context.workspace.root;
 
-        const serverBuilder: ServerBuilder = new ServerBuilder(this.context);
-        let serverBuilderConfig: ServerBuilderSchema;
+    const serverBuilder: ServerBuilder = new ServerBuilder(this.context);
+    let serverBuilderConfig: ServerBuilderSchema;
 
-        let process: ChildProcess;
-        let first: boolean = true;
-        return this.getBuildTargetOptions(options)
-        .pipe(
-            tap( (cfg: any) => serverBuilderConfig = cfg.options ),
-            concatMap( (cfg: any) => serverBuilder.run(cfg) ),
-            concatMap( event => new Observable( observer => {
-                const outFile = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath+'/server.js'))))
-                const cwd = getSystemPath(normalize(resolve(root, normalize(serverBuilderConfig.outputPath))))
+    return this.getBuildTargetOptions(options).pipe(
+      tap((cfg: any) => (serverBuilderConfig = cfg.options)),
+      concatMap((cfg: any) => serverBuilder.run(cfg)),
+      switchMap(buildEvent => {
+        const outFile = getSystemPath(
+          normalize(
+            resolve(
+              root,
+              normalize(serverBuilderConfig.outputPath + "/server.js")
+            )
+          )
+        );
+        const cwd = getSystemPath(
+          normalize(resolve(root, normalize(serverBuilderConfig.outputPath)))
+        );
+        return this.createNodeProcess(outFile, {
+          stdio: "inherit",
+          cwd: cwd
+        }).pipe(
+          map(() => {
+            this.context.logger.info(chalk.italic("🎉 Server started."));
+            return buildEvent;
+          })
+        );
+      })
+    );
+  }
 
-                try{
-                    process.kill();
-                }catch{}
-                
-                process = spawn('node', [ '-r', 'source-map-support/register', outFile ], {stdio: 'inherit', cwd: cwd});
-                process.on('exit', (code,signal)=>{
-                   this.context.logger.error(tags.stripIndent`Server exited with code ${code}. (${signal}) `)
-                })
-                
-                if(first)
-                {
-                    this.context.logger.info(chalk.italic('🎉 Server started.'));
-                    first = false;
-                }else{
-                    this.context.logger.info(chalk.bold('Bundle changed restarting server.'));
-                }
+  createNodeProcess(
+    scriptPath: string,
+    options?: SpawnOptions
+  ): Observable<ChildProcess> {
+    return new Observable(observer => {
+      const child = spawn(
+        "node",
+        ["-r", "source-map-support/register", scriptPath],
+        options
+      );
+      child.on("error", error => observer.error(error));
+      child.on("close", () => observer.complete());
+      child.on("exit", () => observer.complete());
+      observer.next();
+      return () => {
+        process.kill(child.pid, "SIGKILL");
+        child.kill("SIGKILL");
+      };
+    });
+  }
 
-                
-                observer.next(event);
-                return ()=>{
-                    try{
-                        process.kill();
-                    }catch{}
-                }
-            }))
-        )
-    }
-
-
-    getBuildTargetOptions(options: DevServerBuilderOptions){
-        const architect = this.context.architect;
-        const [project, target, configuration] = options.buildTarget.split(':');
-        const overrides = { watch: true, preserveSymlinks: options.preserveSymlinks };
-        const buildTargetSpec = {  project, target, configuration, overrides }
-        const builderConfig = architect.getBuilderConfiguration(buildTargetSpec);
-        return architect.getBuilderDescription(builderConfig).pipe(
-            concatMap( desc => architect.validateBuilderOptions(builderConfig, desc) )
-        )
-    }
+  getBuildTargetOptions(options: DevServerBuilderOptions) {
+    const architect = this.context.architect;
+    const [project, target, configuration] = options.buildTarget.split(":");
+    const overrides = {
+      watch: true,
+      preserveSymlinks: options.preserveSymlinks
+    };
+    const buildTargetSpec = { project, target, configuration, overrides };
+    const builderConfig = architect.getBuilderConfiguration(buildTargetSpec);
+    return architect
+      .getBuilderDescription(builderConfig)
+      .pipe(
+        concatMap(desc => architect.validateBuilderOptions(builderConfig, desc))
+      );
+  }
 }
 
 export default DevServerBuilder;
