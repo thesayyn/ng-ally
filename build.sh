@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-
+#Taken from https://github.com/angular/angular/blob/master/build.sh
 set -u -e -o pipefail
 
 readonly currentDir=$(cd $(dirname $0); pwd)
-
-# TODO(i): wrap into subshell, so that we don't pollute CWD, but not yet to minimize diff collision with Jason
-cd ${currentDir}
+cd "$currentDir"
 
 PACKAGES=(
   platform-server
@@ -13,34 +11,27 @@ PACKAGES=(
   database
   devkit
   schematics
-  )
+)
 
-TSC_PACKAGES=(null)
-
-NODE_PACKAGES=(
+TSC_PACKAGES=(
   devkit
   schematics
-  )
+)
 
-
+NODE_PACKAGES=(null)
 
 BUILD_ALL=true
 BUNDLE=true
 VERSION_PREFIX=$(node -p "require('./package.json').version")
 VERSION_SUFFIX="-$(git log --oneline -1 | awk '{print $1}')"
-REMOVE_BENCHPRESS=false
-BUILD_EXAMPLES=true
 COMPILE_SOURCE=true
 TYPECHECK_ALL=true
-BUILD_TOOLS=false
 
 for ARG in "$@"; do
   case "$ARG" in
     --quick-bundle=*)
       COMPILE_SOURCE=false
       TYPECHECK_ALL=false
-      BUILD_EXAMPLES=false
-      BUILD_TOOLS=false
       ;;
     --packages=*)
       PACKAGES_STR=${ARG#--packages=}
@@ -52,19 +43,12 @@ for ARG in "$@"; do
       ;;
     --publish)
       VERSION_SUFFIX=""
-      REMOVE_BENCHPRESS=true
-      ;;
-    --examples=*)
-      BUILD_EXAMPLES=${ARG#--examples=}
       ;;
     --compile=*)
       COMPILE_SOURCE=${ARG#--compile=}
       ;;
     --typecheck=*)
       TYPECHECK_ALL=${ARG#--typecheck=}
-      ;;
-    --tools=*)
-      BUILD_TOOLS=${ARG#--tools=}
       ;;
     *)
       echo "Unknown option $ARG."
@@ -101,47 +85,6 @@ containsElement () {
   local e
   for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
   return 1
-}
-
-
-#######################################
-# Adds banners to all files in a directory
-# Arguments:
-#   param1 - Directory to add license banners to
-# Returns:
-#   None
-#######################################
-addBanners() {
-  for file in ${1}/*; do
-    if [[ -f ${file} && "${file##*.}" != "map" ]]; then
-      cat ${LICENSE_BANNER} > ${file}.tmp
-      cat ${file} >> ${file}.tmp
-      mv ${file}.tmp ${file}
-    fi
-  done
-}
-
-#######################################
-# Minifies files in a directory
-# Arguments:
-#   param1 - Directory to minify
-# Returns:
-#   None
-#######################################
-minify() {
-  # Iterate over the files in this directory, rolling up each into ${2} directory
-  regex="(.+).js"
-  files=(${1}/*)
-  echo "${files[@]}"
-  for file in "${files[@]}"; do
-    echo "${file}"
-    base_file=$( basename "${file}" )
-    if [[ "${base_file}" =~ $regex && "${base_file##*.}" != "map" ]]; then
-      local out_file=$(dirname "${file}")/${BASH_REMATCH[1]}.min.js
-      echo "======          $UGLIFY -c --comments -o ${out_file} --source-map "includeSources=true,content='${file}.map',filename='${out_file}.map'" ${file}"
-      $UGLIFY -c --comments -o ${out_file} --source-map "includeSources=true,content='${file}.map',filename='${out_file}.map'" ${file}
-    fi
-  done
 }
 
 #######################################
@@ -260,16 +203,11 @@ N="
 TSC=`pwd`/node_modules/.bin/tsc
 NGC="node --max-old-space-size=3000 `pwd`/node_modules/.bin/ngc"
 UGLIFY=`pwd`/node_modules/.bin/uglifyjs
-ROLLUP=`pwd`/node_modules/.bin/rollup
-
 
 if [[ ${BUILD_ALL} == true && ${TYPECHECK_ALL} == true ]]; then
-
-    rm -rf ./dist/all/
-    rm -rf ./dist/packages
-    mkdir -p ./dist/all/
-
-
+  rm -rf ./dist/all/
+  rm -rf ./dist/packages
+  mkdir -p ./dist/all/
 fi
 
 if [[ ${BUILD_ALL} == true ]]; then
@@ -279,7 +217,7 @@ if [[ ${BUILD_ALL} == true ]]; then
   fi
 fi
 
-if [[ ${BUILD_TOOLS} == true || ${BUILD_ALL} == true ]]; then
+if [[ ${BUILD_ALL} == true ]]; then
   mkdir -p ./dist/packages-dist
 fi
 
@@ -297,9 +235,8 @@ do
   FESM2015_DIR=${NPM_DIR}/fesm2015
   ESM5_DIR=${NPM_DIR}/esm5
   FESM5_DIR=${NPM_DIR}/fesm5
-  BUNDLES_DIR=${NPM_DIR}/bundles
 
-  LICENSE_BANNER=${ROOT_DIR}/license-banner.txt
+  LICENSE_BANNER=${PWD}/license-banner.txt
 
   if [[ ${COMPILE_SOURCE} == true ]]; then
     rm -rf ${OUT_DIR}
@@ -317,17 +254,19 @@ do
       rsync -a --exclude=*.js --exclude=*.js.map ${OUT_DIR}/ ${NPM_DIR}
 
       (
-        cd  ${SRC_DIR}
-        echo "======         Copy ESM2015 for ${PACKAGE}"
-        rsync -a --exclude="locale/**" --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR}/ ${ESM2015_DIR}
+        if ! containsElement "${PACKAGE}" "${TSC_PACKAGES[@]}"; then
+          cd  ${SRC_DIR}
+          echo "======         Copy ESM2015 for ${PACKAGE}"
+          rsync -a --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR}/ ${ESM2015_DIR}
 
-        echo "======         Produce ESM5 version"
-        compilePackageES5 ${SRC_DIR} ${OUT_DIR_ESM5} ${PACKAGE}
-        rsync -a --exclude="locale/**" --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR_ESM5}/ ${ESM5_DIR}
-
-        addBanners ${BUNDLES_DIR}
-        minify ${BUNDLES_DIR}
-
+          echo "======         Produce ESM5 version"
+          compilePackageES5 ${SRC_DIR} ${OUT_DIR_ESM5} ${PACKAGE}
+          rsync -a --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR_ESM5}/ ${ESM5_DIR}
+        else 
+          echo "======        Copy ${PACKAGE} devkit tool"
+          rsync -amr ${OUT_DIR}/ ${NPM_DIR}
+        fi
+  
         if [[ -e ${SRC_DIR}/build.sh ]]; then
           echo "======         Custom build for ${PACKAGE}"
           cd ${SRC_DIR} && ${SRC_DIR}/build.sh
@@ -350,7 +289,7 @@ do
       rsync -amr --include='**/files/**' --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
     fi
     
-    cp ${ROOT_DIR}/README.md ${NPM_DIR}/
+    cp ${PWD}/README.md ${NPM_DIR}/
   fi
 
 

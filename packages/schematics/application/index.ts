@@ -97,7 +97,7 @@ function addAppToWorkspaceFile(options: ApplicationOptions, workspace: Workspace
         },
         configurations: {
           production: {
-            browserTarget: `${options.name}:build:production`,
+            buildTarget: `${options.name}:build:production`,
           },
         },
       },

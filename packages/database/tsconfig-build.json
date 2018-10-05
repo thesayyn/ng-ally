@@ -1,11 +1,10 @@
 {
-    "extends": "../tsconfig-build.json",
+    "extends": "../../tsconfig-build.json",
   
     "compilerOptions": {
       "baseUrl": ".",
       "rootDir": ".",
       "paths": {
-        "@angular/core": ["../../dist/packages/core"],
         "mongodb": ["../../node_modules/@types/mongodb"]
       },
       "outDir": "../../dist/packages/database"

@@ -1,1 +1,1 @@
-export const PLATFORM_SERVER_ID = 'platformServer';
+export const PLATFORM_SERVER_ID = "platformServer";

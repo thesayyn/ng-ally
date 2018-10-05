@@ -1,39 +1,25 @@
-import { Type, InjectionToken } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Request, Response } from './http'
-import { RouterErrorHandlingStrategy } from './router_error_handler';
+import { InjectionToken, Type } from "@angular/core";
+import { Observable } from "rxjs";
+import { Request, Response } from "./http";
 
 export type Routes = Route[];
 
-/**
- * Presents the routes injection token.
- * @stable
- */
-export const ROUTES = new InjectionToken<Route[][]>('ROUTES');
+export const ROUTES = new InjectionToken<Route[][]>("ROUTES");
 
-
-/**
- * See {@link Routes} for more details.
- * @stable
- */
 export interface Route {
   path: string;
-  type?: 'PUT' | 'POST' | 'GET' | 'DELETE' | 'OPTIONS' | 'PATCH';
-  errorHandler?: Type<any>,
+  type?: "PUT" | "POST" | "GET" | "DELETE" | "OPTIONS" | "PATCH";
+  errorHandler?: Type<any>;
   request?: Type<any>;
   redirectTo?: string;
   canActivate?: any[];
-  canActivateChild?: any[],
-  canDeactivate?: any[],
-  children?: Route[]
+  canActivateChild?: any[];
+  canDeactivate?: any[];
+  children?: Route[];
+  data?: any;
 }
 
-
-/**
- * Validates route config recursively.
- * @stable
- */
-export function validateConfig(config: Routes, parentPath: string = ''): void {
+export function validateConfig(config: Routes, parentPath: string = ""): void {
   // forEach doesn't iterate undefined values
   for (let i = 0; i < config.length; i++) {
     const route: Route = config[i];
@@ -56,41 +42,51 @@ function validateNode(route: Route, fullPath: string): void {
     `);
   }
   if (Array.isArray(route)) {
-    throw new Error(`Invalid configuration of route '${fullPath}': Array cannot be specified`);
+    throw new Error(
+      `Invalid configuration of route '${fullPath}': Array cannot be specified`
+    );
   }
 
   if (route.redirectTo && route.request) {
     throw new Error(
-        `Invalid configuration of route '${fullPath}': redirectTo and request cannot be used together`);
+      `Invalid configuration of route '${fullPath}': redirectTo and request cannot be used together`
+    );
   }
 
   if (route.children && route.redirectTo) {
     throw new Error(
-        `Invalid configuration of route '${fullPath}': children and redirectTo cannot be used together`);
+      `Invalid configuration of route '${fullPath}': children and redirectTo cannot be used together`
+    );
   }
 
   if (route.redirectTo && route.request) {
     throw new Error(
-        `Invalid configuration of route '${fullPath}': redirectTo and request cannot be used together`);
+      `Invalid configuration of route '${fullPath}': redirectTo and request cannot be used together`
+    );
   }
 
   if (route.children && route.type) {
     throw new Error(
-        `Invalid configuration of route '${fullPath}': children and type cannot be used together`);
+      `Invalid configuration of route '${fullPath}': children and type cannot be used together`
+    );
   }
 
-  if ((!route.children && !route.redirectTo)  && !route.type) {
+  if (!route.children && !route.redirectTo && !route.type) {
     throw new Error(
-        `Invalid configuration of route '${fullPath}': routes must have a type`);
+      `Invalid configuration of route '${fullPath}': routes must have a type`
+    );
   }
 
   if (route.path === void 0) {
     throw new Error(
-        `Invalid configuration of route '${fullPath}': routes must have a path`);
+      `Invalid configuration of route '${fullPath}': routes must have a path`
+    );
   }
 
-  if (typeof route.path === 'string' && route.path.charAt(0) === '/') {
-    throw new Error(`Invalid configuration of route '${fullPath}': path cannot start with a slash`);
+  if (typeof route.path === "string" && route.path.charAt(0) === "/") {
+    throw new Error(
+      `Invalid configuration of route '${fullPath}': path cannot start with a slash`
+    );
   }
 }
 
@@ -99,7 +95,7 @@ function getFullPath(parentPath: string, currentRoute: Route): string {
     return parentPath;
   }
   if (!parentPath && !currentRoute.path) {
-    return '';
+    return "";
   } else if (parentPath && !currentRoute.path) {
     return `${parentPath}/`;
   } else if (!parentPath && currentRoute.path) {
@@ -109,65 +105,67 @@ function getFullPath(parentPath: string, currentRoute: Route): string {
   }
 }
 
-/**
- * Adds slash to route path
- */
-export function normalizePath(route: Route){
+// Adds slash to route path
+ export function normalizePath(route: Route) {
   return `/${route.path}`;
 }
 
 export function copyConfig(r: Route): Route {
   const children = r.children && r.children.map(copyConfig);
-  return children ? {...r, children} : {...r};
+  return children ? { ...r, children } : { ...r };
 }
 
 /**
  * Presents global router guard's injection token.
  * @stable
  */
-export const ROUTER_GUARDS = new InjectionToken<any>('Router Guards.');
+export const ROUTER_GUARDS = new InjectionToken<any>("Router Guards.");
 
-
-export interface CanActivate{
-  canActivate(request: Request, response: Response): Promise<boolean> | Observable<boolean> | boolean
+export interface CanActivate {
+  canActivate(
+    request: Request,
+    response: Response
+  ): Promise<boolean> | Observable<boolean> | boolean;
 }
 
-
-export interface CanActivateChild{
-  canActivateChild(request: Request, response: Response): Promise<boolean> | Observable<boolean> | boolean
+export interface CanActivateChild {
+  canActivateChild(
+    request: Request,
+    response: Response
+  ): Promise<boolean> | Observable<boolean> | boolean;
 }
 
-export interface CanDeactivate{
-  canDeactivate(request: Request, response: Response): Promise<boolean> | Observable<boolean> | boolean
+export interface CanDeactivate {
+  canDeactivate(
+    request: Request,
+    response: Response
+  ): Promise<boolean> | Observable<boolean> | boolean;
 }
 
-
-export const EXTRA_OPTIONS = new InjectionToken('Router extra options.');
+export const EXTRA_OPTIONS = new InjectionToken("Router extra options.");
 
 export interface ExtraOptions {
-  
-    /**
-     * Configures  error handling strategy..
-     */
-    errorHandlingStrategy?: 'sendThroughResponse' | 'reportToErrorHandler';
+  /**
+   * Configures  error handling strategy..
+   */
+  errorHandlingStrategy?: "sendThroughResponse" | "reportToErrorHandler";
 
-    /**
-     * Enable case sensitivity.
-     */
-    caseSensitive?: boolean;
+  /**
+   * Enable case sensitivity.
+   */
+  caseSensitive?: boolean;
 
-    /**
-     * Preserve the req.params values from the parent router.
-     * If the parent and the child have conflicting param names, the child’s value take precedence.
-     *
-     * @default true
-     * @since 4.5.0
-     */
-    mergeParams?: boolean;
+  /**
+   * Preserve the req.params values from the parent router.
+   * If the parent and the child have conflicting param names, the child’s value take precedence.
+   *
+   * @default true
+   * @since 4.5.0
+   */
+  mergeParams?: boolean;
 
-    /**
-     * Enable strict routing.
-     */
-    strict?: boolean;
+  /**
+   * Enable strict routing.
+   */
+  strict?: boolean;
 }
-  

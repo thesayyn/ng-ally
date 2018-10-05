@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "stripInternal": true,
-    "strictNullChecks": true,
+    //"strictNullChecks": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "module": "es2015",

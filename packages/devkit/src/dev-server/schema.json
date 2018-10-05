@@ -7,15 +7,45 @@
         "type": "string",
         "description": "Target to serve."
       },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
       "port": {
         "type": "number",
         "description": "Port to listen on.",
         "default": 4300
       },
-      "host": {
+      "inspect": {
+        "type": "boolean",
+        "description": "Enable inspector agent.",
+        "default": false
+      },
+      "inspectBrk": {
+        "type": "boolean",
+        "description": "Enable inspector agent.",
+        "default": false
+      },
+      "inspectHost": {
         "type": "string",
         "description": "Host to listen on.",
         "default": "localhost"
+      },
+      "inspectPort": {
+        "type": "number",
+        "description": "Debug port to listen on.",
+        "default": 9222
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Adds more details to output logging.",
+        "default": false
+      },
+      "progress": {
+        "type": "boolean",
+        "description": "Log progress to the console while building.",
+        "default": true
       },
       "preserveSymlinks": {
         "type": "boolean",

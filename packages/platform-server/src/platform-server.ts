@@ -1,7 +1,0 @@
-export * from './platform_server_factory'
-export { PLATFORM_SERVER_ID } from './platform_tokens'
-export { ServerApplicationRef } from './application_ref'
-export { APP_PORT, APP_HOST, EXPRESS_APP, HTTP_SERVER, SOCKETIO_APP } from './application_tokens'
-export { ServerModule } from './server_module'
-export { VERSION } from './version'
-export { SocketIO, SocketIOModule } from './socketio'

@@ -6,3 +6,6 @@ import 'core-js/es7/reflect';
  * Zone JS is required by default for Angular itself.
  */
 import 'zone.js/dist/zone-node';  // Included with Angular CLI.
+
+
+global['XMLHttpRequest'] = require('xmlhttprequest').XMLHttpRequest; // Included with @ng-ally/devkit

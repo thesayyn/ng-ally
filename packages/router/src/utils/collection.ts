@@ -18,7 +18,7 @@ export function flatten<T>(arr: T[][]): T[] {
 export function andObservables(observables: Observable<Observable<any>>): Observable<boolean> {
   return observables.pipe(mergeAll(), every((result: any) => result === true));
 }
-
+ 
 export function wrapIntoObservable<T>(value: T |  Promise<T>| Observable<T>):
   Observable<T> {
 if (isObservable(value)) {

@@ -1,6 +1,6 @@
-import { InjectionToken } from '@angular/core'
-import { Express } from 'express'
-import { Server } from 'http'
+import { InjectionToken } from '@angular/core';
+import { Express } from 'express';
+import { Server } from 'http';
 
 
 export const EXPRESS_APP = new InjectionToken<Express>('EXPRESS_APP');

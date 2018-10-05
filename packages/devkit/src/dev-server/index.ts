@@ -1,27 +1,17 @@
 import {
-  BuildEvent,
   Builder,
   BuilderConfiguration,
-  BuilderContext
+  BuilderContext,
+  BuildEvent
 } from "@angular-devkit/architect";
-import {
-  getSystemPath,
-  resolve,
-  normalize
-} from "@angular-devkit/core";
+import { tags } from "@angular-devkit/core";
+import * as path from "path";
 import { Observable } from "rxjs";
-import { concatMap, map, tap, switchMap } from "rxjs/operators";
-import { ChildProcess, spawn, SpawnOptions } from "child_process";
-import { ServerBuilderSchema } from "../build/schema";
+import { concatMap, tap } from "rxjs/operators";
+import * as StartServerWebpackPlugin from "start-server-webpack-plugin";
 import { ServerBuilder } from "../build";
-import chalk from "chalk";
-
-export interface DevServerBuilderOptions {
-  buildTarget: string;
-  port: number;
-  host: string;
-  preserveSymlinks: boolean;
-}
+import { ServerBuilderSchema } from "../build/schema";
+import { DevServerBuilderOptions } from "./schema";
 
 export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
   constructor(public context: BuilderContext) {}
@@ -32,56 +22,62 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
     const options = builderConfig.options;
     const root = this.context.workspace.root;
 
+    if (options.inspect && options.inspectBrk) {
+      throw new Error(`--inspect-brk and --inspect cannot be used together.`);
+    }
+
+    this.context.logger.info(tags.oneLine`
+      **
+      NgAlly Development Server is listening on ${options.host}:${options.port},
+      open your browser on ${options.host}:${options.port}
+      **
+    `);
+
+    const nodeArgs: string[] = [];
+
+    if (options.inspect) {
+      nodeArgs.push(`--inspect=${options.inspectHost}:${options.inspectPort}`);
+    } else if (options.inspectBrk) {
+      nodeArgs.push(
+        `--inspect-brk=${options.inspectHost}:${options.inspectPort}`
+      );
+    }
+
+    if (options.inspect || options.inspectBrk) {
+      this.context.logger.warn(tags.oneLine`
+      **
+       Inspect mode enabled on ${options.inspectHost}:${options.inspectPort}. 
+       for further information check: https://nodejs.org/en/docs/guides/debugging-getting-started/
+      **
+    `);
+    }
+
     const serverBuilder: ServerBuilder = new ServerBuilder(this.context);
     let serverBuilderConfig: ServerBuilderSchema;
 
     return this.getBuildTargetOptions(options).pipe(
-      tap((cfg: any) => (serverBuilderConfig = cfg.options)),
-      concatMap((cfg: any) => serverBuilder.run(cfg)),
-      switchMap(buildEvent => {
-        const outFile = getSystemPath(
-          normalize(
-            resolve(
-              root,
-              normalize(serverBuilderConfig.outputPath + "/server.js")
-            )
-          )
-        );
-        const cwd = getSystemPath(
-          normalize(resolve(root, normalize(serverBuilderConfig.outputPath)))
-        );
-        return this.createNodeProcess(outFile, {
-          stdio: "inherit",
-          cwd: cwd
-        }).pipe(
-          map(() => {
-            this.context.logger.info(chalk.italic("🎉 Server started."));
-            return buildEvent;
+      tap(cfg => {
+        serverBuilderConfig = cfg.options as ServerBuilderSchema;
+
+        serverBuilder.extraPlugins.push(
+          new StartServerWebpackPlugin({
+            name: serverBuilderConfig.outputName,
+            args: [
+              path.resolve(
+                root,
+                serverBuilderConfig.outputPath,
+                serverBuilderConfig.outputName
+              ),
+              options.host,
+              options.port.toString()
+            ],
+            nodeArgs
           })
         );
-      })
+      }),
+      concatMap((cfg: any) => serverBuilder.run(cfg)),
+      tap(() => console.log("dsadads"))
     );
-  }
-
-  createNodeProcess(
-    scriptPath: string,
-    options?: SpawnOptions
-  ): Observable<ChildProcess> {
-    return new Observable(observer => {
-      const child = spawn(
-        "node",
-        ["-r", "source-map-support/register", scriptPath],
-        options
-      );
-      child.on("error", error => observer.error(error));
-      child.on("close", () => observer.complete());
-      child.on("exit", () => observer.complete());
-      observer.next();
-      return () => {
-        process.kill(child.pid, "SIGKILL");
-        child.kill("SIGKILL");
-      };
-    });
   }
 
   getBuildTargetOptions(options: DevServerBuilderOptions) {
@@ -89,6 +85,8 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
     const [project, target, configuration] = options.buildTarget.split(":");
     const overrides = {
       watch: true,
+      verbose: options.verbose,
+      progress: options.progress,
       preserveSymlinks: options.preserveSymlinks
     };
     const buildTargetSpec = { project, target, configuration, overrides };

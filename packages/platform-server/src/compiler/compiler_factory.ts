@@ -4,6 +4,7 @@
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
+ * taken from https://github.com/angular/angular/blob/master/packages/platform-browser-dynamic/src/compiler_factory.ts
  */
 
 import {Compiler, CompilerFactory, ComponentFactory, CompilerOptions, ModuleWithComponentFactories, Inject, InjectionToken, Optional, PACKAGE_ROOT_URL, PlatformRef, StaticProvider, TRANSLATIONS, Type, isDevMode, platformCore, ɵConsole as Console, ViewEncapsulation, Injector, NgModuleFactory, TRANSLATIONS_FORMAT, MissingTranslationStrategy,} from '@angular/core';
@@ -13,6 +14,7 @@ import {StaticSymbolCache, JitCompiler, ProviderMeta, ExternalReference, I18NHtm
 import {JitReflector} from './compiler_reflector';
 
 export const ERROR_COLLECTOR_TOKEN = new InjectionToken('ErrorCollector');
+
 
 /**
  * A default provider for {@link PACKAGE_ROOT_URL} that maps to '/'.
@@ -31,6 +33,7 @@ const _NO_RESOURCE_LOADER: ResourceLoader = {
 const baseHtmlParser = new InjectionToken('HtmlParser');
 
 export class CompilerImpl implements Compiler {
+
   private _delegate: JitCompiler;
   public readonly injector: Injector;
   constructor(
@@ -78,6 +81,12 @@ export class CompilerImpl implements Compiler {
   }
   clearCache(): void { this._delegate.clearCache(); }
   clearCacheFor(type: Type<any>) { this._delegate.clearCacheFor(type); }
+
+  getModuleId(moduleType: Type<any>): string|undefined {
+    const meta = this._metadataResolver.getNgModuleMetadata(moduleType);
+    return meta && meta.id || undefined;
+  }
+
 }
 
 /**
