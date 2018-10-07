@@ -1,24 +1,22 @@
 {
-    "extends": "../../tsconfig-build.json",
-  
-    "compilerOptions": {
-      "baseUrl": ".",
-      "rootDir": ".",
-      "paths": {
-        "mongodb": ["../../node_modules/@types/mongodb"]
-      },
-      "outDir": "../../dist/packages/database"
+  "extends": "../../tsconfig-build.json",
+
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "paths": {
+      "mongodb": ["../../node_modules/@types/mongodb"]
     },
-  
-    "files": [
-      "public_api.ts"
-    ],
-  
-    "angularCompilerOptions": {
-      "annotateForClosureCompiler": true,
-      "strictMetadataEmit": false,
-      "skipTemplateCodegen": true,
-      "flatModuleOutFile": "database.js",
-      "flatModuleId": "@ng-ally/database"
-    }
+    "outDir": "../../dist/packages/database"
+  },
+
+  "files": ["public_api.ts"],
+
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": true,
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "flatModuleOutFile": "database.js",
+    "flatModuleId": "@ng-ally/database"
   }
+}

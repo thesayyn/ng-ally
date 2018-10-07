@@ -1,10 +1,3 @@
-import { Db } from 'mongodb';
+import { Db } from "mongodb";
 
-export abstract class DatabaseService extends Db { }
-
-
-
-
-
-
-
+export abstract class DatabaseService extends Db {}
