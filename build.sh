@@ -177,6 +177,25 @@ updateVersionReferences() {
 }
 
 #######################################
+# Adds banners to all files in a directory
+# Arguments:
+#   param1 - Directory to add license banners to
+# Returns:
+#   None
+#######################################
+addBanners() {
+  for file in ${1}/*; do
+    if [[ -f ${file} && "${file##*.}" == "js" ]]; then
+      cat ${LICENSE_BANNER} > ${file}.tmp
+      cat ${file} >> ${file}.tmp
+      mv ${file}.tmp ${file}
+    elif [[ -d ${file} ]]; then
+      addBanners ${file}
+    fi
+  done
+}
+
+#######################################
 # Drops the last entry of a path. Similar to normalizing a path such as
 # /parent/child/.. to /parent.
 # Arguments:
@@ -184,7 +203,6 @@ updateVersionReferences() {
 # Returns:
 #   None
 #######################################
-
 dropLast() {
   local last_item=$(basename ${1})
   local regex=local regex="(.+)/${last_item}"
@@ -198,8 +216,6 @@ dropLast() {
 VERSION="${VERSION_PREFIX}${VERSION_SUFFIX}"
 echo "====== BUILDING: Version ${VERSION}"
 
-N="
-"
 TSC=`pwd`/node_modules/.bin/tsc
 NGC="node --max-old-space-size=3000 `pwd`/node_modules/.bin/ngc"
 UGLIFY=`pwd`/node_modules/.bin/uglifyjs
@@ -263,7 +279,7 @@ do
           compilePackageES5 ${SRC_DIR} ${OUT_DIR_ESM5} ${PACKAGE}
           rsync -a --exclude="**/*.d.ts" --exclude="**/*.metadata.json" ${OUT_DIR_ESM5}/ ${ESM5_DIR}
         else 
-          echo "======        Copy ${PACKAGE} devkit tool"
+          echo "======        Copy ${PACKAGE}"
           rsync -amr ${OUT_DIR}/ ${NPM_DIR}
         fi
   
@@ -288,7 +304,11 @@ do
       rsync -ar --include="schema.json" --include="builders.json" --include="collection.json" --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
       rsync -amr --include='**/files/**' --include='*/' --exclude=* ${SRC_DIR}/ ${NPM_DIR}/
     fi
-    
+
+    echo "======        Add banners ${PACKAGE}"
+    addBanners ${NPM_DIR}
+
+    echo "======        Copy ${PACKAGE}  README.md file"
     cp ${PWD}/README.md ${NPM_DIR}/
   fi
 

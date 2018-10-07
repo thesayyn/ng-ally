@@ -1,3 +1,6 @@
 /**
-  * TDAdmin   
-  **/
+ * @license ng-ally v0.0.0-PLACEHOLDER
+ * (c) 2010-2018 TeknoDev. https://teknodev.biz/
+ * License: MIT
+ */
+ 
