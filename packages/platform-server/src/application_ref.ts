@@ -20,4 +20,8 @@ export class ServerApplicationRef {
       this.injector.get(APP_BOOTSTRAP_LISTENER, []).forEach(l => l(undefined))
     );
   }
+
+  ngOnDestroy() {
+    this.injector.get(HTTP_SERVER).close();
+  }
 }

@@ -16,6 +16,8 @@ import {JitReflector} from './compiler_reflector';
 export const ERROR_COLLECTOR_TOKEN = new InjectionToken('ErrorCollector');
 
 
+// TODO: Remove the compiler that provided for pipe, directive eg.
+
 /**
  * A default provider for {@link PACKAGE_ROOT_URL} that maps to '/'.
  */
