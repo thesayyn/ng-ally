@@ -1,14 +1,12 @@
 {
     "name": "@ng-ally/devkit",
-    "version": "0.0.0-PLACEHOLDER",
+    "version": "6.0.0-febfceb",
     "builders": "builders.json",
     "dependencies": {
         "webpack": "^4.19.1",
-        "@ngtools/webpack": "^6.2.4",
-        "string-entry-webpack-plugin": "^1.0.0",
+        "@ngtools/webpack": "^7.0.0-rc.0",
         "copy-webpack-plugin": "^4.5.2",
         "webpack-node-externals": "^1.7.2",
-        "license-webpack-plugin": "^2.0.1",
-        "start-server-webpack-plugin": "^2.2.5"
+        "license-webpack-plugin": "^2.0.1"
     }
 }

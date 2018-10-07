@@ -1,32 +1,21 @@
-import {
-  Builder,
-  BuilderConfiguration,
-  BuilderContext,
-  BuildEvent
-} from "@angular-devkit/architect";
-import {
-  getSystemPath,
-  normalize,
-  Path,
-  resolve,
-  tags
-} from "@angular-devkit/core";
+import { Builder, BuilderConfiguration, BuilderContext, BuildEvent } from "@angular-devkit/architect";
+import { getSystemPath, normalize, Path, resolve, tags } from "@angular-devkit/core";
+import { AngularCompilerPlugin, PLATFORM } from "@ngtools/webpack";
+import * as CopyWebpackPlugin from "copy-webpack-plugin";
+import { LicenseWebpackPlugin } from "license-webpack-plugin";
 import { Observable } from "rxjs";
-import * as path from "path";
-
+import * as webpack from "webpack";
+import * as WebpackNodeExternals from "webpack-node-externals";
+import * as ProgressPlugin from "webpack/lib/ProgressPlugin";
 import { AssetPattern, ServerBuilderSchema } from "./schema";
+import { StringEntriesWebpackPlugin } from "./string_entry";
 import { statsToString } from "./utilities";
 
-import * as webpack from "webpack";
-import { AngularCompilerPlugin, PLATFORM } from "@ngtools/webpack";
-import * as StringEntryWebpackPlugin from "string-entry-webpack-plugin";
-import * as WebpackNodeExternals from "webpack-node-externals";
-import * as CopyWebpackPlugin from "copy-webpack-plugin";
-import * as ProgressPlugin from "webpack/lib/ProgressPlugin";
-import { LicenseWebpackPlugin } from "license-webpack-plugin";
-
 export class ServerBuilder implements Builder<ServerBuilderSchema> {
-  public extraPlugins: webpack.Plugin[] = [];
+
+  public plugins: webpack.Plugin[] = [];
+  public entrypoints: { [key: string]: string[] } = {}
+  
   constructor(public context: BuilderContext) {}
 
   run(
@@ -37,6 +26,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       const root = this.context.workspace.root;
       const config = this.buildWebpackConfig(root, builderConfig.options);
       const compiler = webpack(config);
+
 
       const callback = (err, stats) => {
         if (err) this.context.logger.error(err.message);
@@ -150,14 +140,14 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       }
     }
 
-    let entryPoints: { [key: string]: string[] } = {};
-
     if (options.main) {
-      entryPoints["main"] = [path.resolve(root, options.main)];
+      this.entrypoints.main = this.entrypoints.main || [];
+      this.entrypoints.main.push(  getSystemPath(normalize(resolve(root, normalize(options.main)))) );
     }
 
     if (options.polyfills) {
-      entryPoints["polyfills"] = [path.resolve(root, options.polyfills)];
+      this.entrypoints.polyfills = this.entrypoints.polyfills ||[];
+      this.entrypoints.polyfills.push(  getSystemPath(normalize(resolve(root, normalize(options.polyfills)))) );
     }
 
     return {
@@ -167,7 +157,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       mode: options.optimization ? "production" : "development",
       node: false,
       watch: options.watch,
-      entry: entryPoints,
+      entry: this.entrypoints,
       output: {
         path: getSystemPath(resolve(root, normalize(options.outputPath))),
         filename: "[name].js",
@@ -203,12 +193,18 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       ],
       plugins: [
         new AngularCompilerPlugin({
-          tsConfigPath: path.resolve(root, options.tsConfig),
-          mainPath: path.resolve(root, options.main),
-          skipCodeGeneration: options.aot !== true,
-          platform: PLATFORM.Server
+          tsConfigPath: getSystemPath(
+            normalize(resolve(root, normalize(options.tsConfig)))
+          ),
+          mainPath: getSystemPath(
+            normalize(resolve(root, normalize(options.main)))
+          ),
+          hostReplacementPaths,
+          skipCodeGeneration: true,
+          platform: PLATFORM.Server,
+          sourceMap: options.sourceMap
         }),
-        new StringEntryWebpackPlugin({
+        new StringEntriesWebpackPlugin({
           [options.outputName]: tags.stripIndents`
             /** Automatically generated with @ng-ally/devkit **/
             ${options.polyfills ? "require('./polyfills');" : ""}
@@ -216,7 +212,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
           `
         }),
         ...extraPlugins,
-        ...this.extraPlugins
+        ...this.plugins
       ]
     };
   }

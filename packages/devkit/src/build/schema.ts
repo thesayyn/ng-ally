@@ -10,7 +10,6 @@ export interface ServerBuilderSchema {
   poll: number;
   progress?: boolean;
   verbose: boolean;
-  aot: boolean;
   sourceMap: boolean;
   optimization?: boolean;
   fileReplacements: FileReplacement[];

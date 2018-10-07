@@ -4,14 +4,13 @@ import {
   BuilderContext,
   BuildEvent
 } from "@angular-devkit/architect";
-import { tags } from "@angular-devkit/core";
-import * as path from "path";
+import { tags, logging } from "@angular-devkit/core";
 import { Observable } from "rxjs";
 import { concatMap, tap } from "rxjs/operators";
-import * as StartServerWebpackPlugin from "start-server-webpack-plugin";
 import { ServerBuilder } from "../build";
 import { ServerBuilderSchema } from "../build/schema";
 import { DevServerBuilderOptions } from "./schema";
+import { ClusterWebpackPlugin } from "./cluster_webpack";
 
 export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
   constructor(public context: BuilderContext) {}
@@ -29,27 +28,30 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
     this.context.logger.info(tags.oneLine`
       **
       NgAlly Development Server is listening on ${options.host}:${options.port},
-      open your browser on ${options.host}:${options.port}
+      open your browser on http://${options.host}:${options.port}
       **
     `);
 
-    const nodeArgs: string[] = [];
+    if (options.inspect || options.inspectBrk) {
+      this.context.logger.info(tags.oneLine`
+      **
+       Inspect mode enabled on ${options.inspectHost}:${options.inspectPort}. 
+      **
+      `);
+    }
 
+    const nodeArgs: string[] = [];
     if (options.inspect) {
       nodeArgs.push(`--inspect=${options.inspectHost}:${options.inspectPort}`);
     } else if (options.inspectBrk) {
       nodeArgs.push(
         `--inspect-brk=${options.inspectHost}:${options.inspectPort}`
       );
-    }
 
-    if (options.inspect || options.inspectBrk) {
-      this.context.logger.warn(tags.oneLine`
-      **
-       Inspect mode enabled on ${options.inspectHost}:${options.inspectPort}. 
+      this.context.logger.warn(tags.stripIndents`
+       Attention: Inspect and break mode enabled. The server wouldn't start to work until you connect to the inspector agent.
        for further information check: https://nodejs.org/en/docs/guides/debugging-getting-started/
-      **
-    `);
+      `);
     }
 
     const serverBuilder: ServerBuilder = new ServerBuilder(this.context);
@@ -58,25 +60,17 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
     return this.getBuildTargetOptions(options).pipe(
       tap(cfg => {
         serverBuilderConfig = cfg.options as ServerBuilderSchema;
-
-        serverBuilder.extraPlugins.push(
-          new StartServerWebpackPlugin({
+        serverBuilder.plugins.push(
+          new ClusterWebpackPlugin({
             name: serverBuilderConfig.outputName,
-            args: [
-              path.resolve(
-                root,
-                serverBuilderConfig.outputPath,
-                serverBuilderConfig.outputName
-              ),
-              options.host,
-              options.port.toString()
-            ],
-            nodeArgs
+            args: [options.host, options.port.toString()],
+            execArgv: nodeArgs,
+            inspectPort: options.inspectPort,
+            logger: this.context.logger as any as logging.Logger
           })
         );
       }),
-      concatMap((cfg: any) => serverBuilder.run(cfg)),
-      tap(() => console.log("dsadads"))
+      concatMap((cfg: any) => serverBuilder.run(cfg))
     );
   }
 
