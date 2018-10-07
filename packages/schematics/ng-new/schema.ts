@@ -1,9 +1,7 @@
 export interface Schema {
- 
-    directory?: string;
-
-    name: string;
-  
-    version?: string;
-
-  }
+  directory?: string;
+  name: string;
+  skipInstall: boolean;
+  skipGit: boolean;
+  commit: Object;
+}

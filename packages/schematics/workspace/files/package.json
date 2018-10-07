@@ -1,29 +1,28 @@
 {
-    "name": "<%= utils.dasherize(name) %>",
-    "version": "0.0.0",
-    "scripts": {
-      "ng": "ng",
-      "start": "ng serve",
-      "build": "ng build",
-      "test": "ng test",
-      "lint": "ng lint",
-      "e2e": "ng e2e"
-    },
-    "private": true,
-    "dependencies": {
-      "@angular/core": "<%= latestVersions.Angular %>",
-      "@ng-ally/platform-server": "<%= latestVersions.NgAlly %>",
-      "@ng-ally/database": "<%= latestVersions.NgAlly %>",
-      "@ng-ally/router": "<%= latestVersions.NgAlly %>",
-      "core-js": "^2.5.4",
-      "rxjs": "<%= latestVersions.RxJs %>",
-      "zone.js": "<%= latestVersions.ZoneJs %>"
-    },
-    "devDependencies": {
-      "@angular/cli": "~<%= version %>",
-      "@angular/compiler-cli": "<%= latestVersions.Angular %>",
-      "@ng-ally/devkit": "<%= latestVersions.NgAlly %>",
-      "typescript": "<%= latestVersions.TypeScript %>",
-      "@types/node": "~8.9.4"
-    }
+  "name": "<%= utils.dasherize(name) %>",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/core": "<%= latestVersions.Angular %>",
+    "@ng-ally/platform-server": "<%= latestVersions.NgAlly %>",
+    "@ng-ally/database": "<%= latestVersions.NgAlly %>",
+    "@ng-ally/router": "<%= latestVersions.NgAlly %>",
+    "core-js": "^2.5.4",
+    "rxjs": "<%= latestVersions.RxJs %>",
+    "zone.js": "<%= latestVersions.ZoneJs %>"
+  },
+  "devDependencies": {
+    "@angular/cli": "<%= latestVersions.Angular %>",
+    "@angular/compiler-cli": "<%= latestVersions.Angular %>",
+    "@ng-ally/devkit": "<%= latestVersions.NgAlly %>",
+    "typescript": "<%= latestVersions.TypeScript %>",
+    "@types/node": "*",
+    "@types/mongodb": "*",
+    "@types/express": "*"
   }
+}

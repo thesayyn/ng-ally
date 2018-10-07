@@ -1,11 +1,9 @@
-import { NgModule } from '@angular/core'
-import { ServerModule } from '@ng-ally/platform-server'
+import { NgModule } from "@angular/core";
+import { ServerModule } from "@ng-ally/platform-server";
 
 @NgModule({
-    imports: [
-        ServerModule
-    ]
+  imports: [ServerModule]
 })
-export class AppModule{
-    ngDoBootstrap(){}
+export class AppModule {
+  ngDoBootstrap() {}
 }

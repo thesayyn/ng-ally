@@ -1,32 +1,60 @@
 {
-    "$schema": "http://json-schema.org/schema",
-    "id": "SchematicsAngularNgNew",
-    "title": "Angular Ng New Options Schema",
-    "type": "object",
-    "properties": {
-      "directory": {
-        "type": "string",
-        "format": "path",
-        "description": "The directory name to create the workspace in.",
-        "default": ""
-      },
-      "name": {
-        "description": "The name of the workspace.",
-        "type": "string",
-        "format": "html-selector",
-        "$default": {
-          "$source": "argv",
-          "index": 0
-        }
-      },
-
-      "version": {
-        "type": "string",
-        "description": "The version of the Angular CLI to use.",
-        "visible": false
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsAngularNgNew",
+  "title": "Angular Ng New Options Schema",
+  "type": "object",
+  "properties": {
+    "directory": {
+      "type": "string",
+      "format": "path",
+      "description": "The directory name to create the workspace in.",
+      "default": ""
+    },
+    "name": {
+      "description": "The name of the workspace.",
+      "type": "string",
+      "format": "html-selector",
+      "$default": {
+        "$source": "argv",
+        "index": 0
       }
     },
-    "required": [
-      "version"
-    ]
+    "skipInstall": {
+      "description": "Skip installing dependency packages.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipGit": {
+      "description": "Skip initializing a git repository.",
+      "type": "boolean",
+      "default": false,
+      "alias": "g"
+    },
+    "commit": {
+      "description": "Initial repository commit information.",
+      "oneOf": [
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "email"
+          ]
+        }
+      ],
+      "default": true
+    }
   }
+}

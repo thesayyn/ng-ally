@@ -1,26 +1,18 @@
 {
-    "$schema": "http://json-schema.org/schema",
-    "id": "SchematicsAngularWorkspace",
-    "title": "Angular Workspace Options Schema",
-    "type": "object",
-    "properties": {
-      "name": {
-        "description": "The name of the workspace.",
-        "type": "string",
-        "format": "html-selector",
-        "$default": {
-          "$source": "argv",
-          "index": 0
-        }
-      },
-      "version": {
-        "type": "string",
-        "description": "The version of the Angular CLI to use.",
-        "visible": false
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsAngularWorkspace",
+  "title": "Angular Workspace Options Schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The name of the workspace.",
+      "type": "string",
+      "format": "html-selector",
+      "$default": {
+        "$source": "argv",
+        "index": 0
       }
-    },
-    "required": [
-      "name",
-      "version"
-    ]
-  }
+    }
+  },
+  "required": ["name"]
+}

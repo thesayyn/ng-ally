@@ -11,14 +11,10 @@
     "paths": {
       "rxjs/*": ["../../node_modules/rxjs/*"]
     },
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "outDir": "../../dist/packages/schematics"
   },
-  "exclude": [
-    "**/files/*"
-  ],
+  "exclude": ["**/files/*"],
   "angularCompilerOptions": {
     "annotateForClosureCompiler": false,
     "strictMetadataEmit": false,
