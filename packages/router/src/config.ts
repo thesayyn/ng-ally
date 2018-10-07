@@ -1,6 +1,5 @@
 import { InjectionToken, Type } from "@angular/core";
-import { Observable } from "rxjs";
-import { Request, Response } from "./http";
+import { RequestHandler, RequestHandlerFn } from './http';
 
 export type Routes = Route[];
 
@@ -8,9 +7,9 @@ export const ROUTES = new InjectionToken<Route[][]>("ROUTES");
 
 export interface Route {
   path: string;
-  type?: "PUT" | "POST" | "GET" | "DELETE" | "OPTIONS" | "PATCH";
+  type?: Method;
   errorHandler?: Type<any>;
-  request?: Type<any>;
+  request?: Type<RequestHandler> | RequestHandlerFn | any;
   redirectTo?: string;
   canActivate?: any[];
   canActivateChild?: any[];
@@ -19,8 +18,9 @@ export interface Route {
   data?: any;
 }
 
+export type Method = "PUT" | "POST" | "GET" | "DELETE" | "OPTIONS" | "PATCH";
+
 export function validateConfig(config: Routes, parentPath: string = ""): void {
-  // forEach doesn't iterate undefined values
   for (let i = 0; i < config.length; i++) {
     const route: Route = config[i];
     const fullPath: string = getFullPath(parentPath, route);
@@ -106,40 +106,13 @@ function getFullPath(parentPath: string, currentRoute: Route): string {
 }
 
 // Adds slash to route path
- export function normalizePath(route: Route) {
+export function normalizePath(route: Route) {
   return `/${route.path}`;
 }
 
 export function copyConfig(r: Route): Route {
   const children = r.children && r.children.map(copyConfig);
   return children ? { ...r, children } : { ...r };
-}
-
-/**
- * Presents global router guard's injection token.
- * @stable
- */
-export const ROUTER_GUARDS = new InjectionToken<any>("Router Guards.");
-
-export interface CanActivate {
-  canActivate(
-    request: Request,
-    response: Response
-  ): Promise<boolean> | Observable<boolean> | boolean;
-}
-
-export interface CanActivateChild {
-  canActivateChild(
-    request: Request,
-    response: Response
-  ): Promise<boolean> | Observable<boolean> | boolean;
-}
-
-export interface CanDeactivate {
-  canDeactivate(
-    request: Request,
-    response: Response
-  ): Promise<boolean> | Observable<boolean> | boolean;
 }
 
 export const EXTRA_OPTIONS = new InjectionToken("Router extra options.");

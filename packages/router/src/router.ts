@@ -1,15 +1,8 @@
-import {
-  InjectionToken,
-  Injector,
-  NgZone,
-  ReflectiveInjector,
-  Type
-} from "@angular/core";
-import { from, Observable } from "rxjs";
+import { Injector, NgZone, ReflectiveInjector } from "@angular/core";
+import { from } from "rxjs";
 import { first, map } from "rxjs/operators";
+import { CheckFn, Checks, Guard, resolveChecks, swallowChecks } from "./checks";
 import {
-  CanActivate,
-  CanDeactivate,
   copyConfig,
   ExtraOptions,
   normalizePath,
@@ -17,65 +10,95 @@ import {
   Routes,
   validateConfig
 } from "./config";
-import { Request, Response } from "./http";
-import { ɵNextFunction, ɵRouter } from "./private_export";
+import { Request, Response, RequestHandlerFn, RequestHandler } from "./http";
+import { ExpressNextFunction, ExpressRouter } from "./private_export";
 import { RouterErrorHandlingStrategy } from "./router_error_handler";
 import { andObservables, wrapIntoObservable } from "./utils";
 import { getZone } from "./zone";
 
 export class Router {
-  private rootRouter: ɵRouter;
-  private _activateGuards: Array<Type<CanActivate>> = [];
-  private _deactivateGuards: Array<Type<CanDeactivate>> = [];
+  private _router: ExpressRouter;
+  private _checks: Checks;
 
   constructor(
     private config: Routes,
-    private guards: Type<any>[],
+    private _guards: Array<Guard>,
     private _injector: Injector,
     private _zone: NgZone,
     private _errorHandler: RouterErrorHandlingStrategy,
     private _options: ExtraOptions
   ) {
     this.resetConfig();
-    this.rootRouter = this.createRouter();
+    this._router = this._createRouter();
     this.registerConfig();
   }
 
   resetConfig(): void {
     validateConfig(this.config);
     this.config = this.config.map(copyConfig);
-    this._activateGuards =
-      this.guards.filter(
-        guard => typeof (guard as any).canActivate == "function"
-      ) || [];
-    this._deactivateGuards =
-      this.guards.filter(
-        guard => typeof (guard as any).canDeactivate == "function"
-      ) || [];
+    this.config.forEach(route => this._resolveChecks(route));
+    this._checks = swallowChecks(
+      this._injector,
+      this._guards || [],
+      "canActivate"
+    );
   }
 
   registerConfig(): void {
-    this.rootRouter.use(this._beforeRoute.bind(this));
-    this.config.forEach(child => this._registerRoutes(child, this.rootRouter));
-    this.rootRouter.use(this._afterRoute.bind(this));
+    if (this._checks.canActivateChecks) {
+      this._router.use((request, response, next) => {
+        this._invokeChecks(
+          { request, response, next, route: undefined },
+          this._checks.canActivateChecks
+        );
+      });
+    }
+    this.config.forEach(child => this._registerRoutes(child, this._router));
+    if (this._checks.canDeactivateChecks) {
+      this._router.use((request, response, next) => {
+        this._invokeChecks(
+          { request, response, next, route: undefined },
+          this._checks.canDeactivateChecks
+        );
+      });
+    }
   }
 
-  createRouter(): ɵRouter {
-    return ɵRouter(this._options);
+  _resolveChecks(route: Route): void {
+    route.canActivate = resolveChecks(
+      this._injector,
+      route.canActivate || [],
+      "canActivate"
+    );
+    route.canActivateChild = resolveChecks(
+      this._injector,
+      route.canActivateChild || [],
+      "canActivateChild"
+    );
+    route.canDeactivate = resolveChecks(
+      this._injector,
+      route.canDeactivate || [],
+      "canDeactivate"
+    );
+    if (route.children) {
+      route.children.forEach(cr => this._resolveChecks(cr));
+    }
   }
 
-  /**
-   * @internal
-   */
-  _handleRoute(request: Request, response: Response, next: ɵNextFunction) {
-    /**
-     * @experimental
-     */
+  _createRouter(): ExpressRouter {
+    return ExpressRouter(this._options);
+  }
+
+  _handleRoute(
+    request: Request,
+    response: Response,
+    next: ExpressNextFunction
+  ) {
     this._zone.runOutsideAngular(() => {
       const zone = getZone({ enableLongStackTrace: true });
       zone.onError.subscribe((error: any) => {
         this._errorHandler.handle(
-          (request as any)._config,
+          request.activatedRoute.route,
           request,
           response,
           error
@@ -90,148 +113,105 @@ export class Router {
           ],
           this._injector
         );
-        (request as any)._injector = injector;
-        this.rootRouter(request, response, next);
+        request.activatedRoute = <ActivatedRoute>{
+          route: undefined,
+          injector: injector,
+          next,
+          request,
+          response,
+          zone
+        };
+        this._router(request, response, next);
       });
     });
   }
 
-  private _beforeRoute = (
-    request: Request,
-    response: Response,
-    next: ɵNextFunction
-  ) =>
-    this._callGuard(
-      request,
-      response,
-      next,
-      "canActivate",
-      this._activateGuards
-    );
-  private _afterRoute = (
-    request: Request,
-    response: Response,
-    next: ɵNextFunction
-  ) =>
-    this._callGuard(
-      request,
-      response,
-      next,
-      "canDeactivate",
-      this._deactivateGuards
-    );
+  _registerRoutes(route: Route, parent: ExpressRouter) {
+    if (route.children) {
+      const router = this._createRouter();
 
-  /**
-   * @experimental
-   */
-  private _registerRoutes(config: Route, parent: ɵRouter) {
-    if (config.children) {
-      const router = this.createRouter();
-
-      if (Array.isArray(config.canActivateChild)) {
-        router.use((request: any, response: any, next) =>
-          this._callGuard(
-            request,
-            response,
-            next,
-            "canActivateChild",
-            config.canActivateChild,
-            config
+      if (Array.isArray(route.canActivateChild)) {
+        router.use((request, response, next) =>
+          this._invokeChecks(
+            { request, response, next, route },
+            route.canActivateChild
           )
         );
       }
 
-      config.children.forEach(child => this._registerRoutes(child, router));
+      route.children.forEach(child => this._registerRoutes(child, router));
 
-      parent.use(normalizePath(config), router);
+      parent.use(normalizePath(route), router);
     } else {
-      const subRouter = this.createRouter();
+      const router = this._createRouter();
 
-      if (Array.isArray(config.canActivate)) {
-        subRouter.use((request: any, response: any, next) =>
-          this._callGuard(
-            request,
-            response,
-            next,
-            "canActivate",
-            config.canActivate,
-            config
+      if (Array.isArray(route.canActivate)) {
+        router.use((request, response, next) =>
+          this._invokeChecks(
+            { request, response, next, route },
+            route.canActivateChild
           )
         );
       }
 
-      subRouter.use((request: Request, response: Response) => {
-        if (config.redirectTo) {
-          response.redirect(config.redirectTo);
+      router.use((request, response, next) => {
+        if (route.redirectTo) {
+          response.redirect(route.redirectTo);
         } else {
-          this._callRequest(config, request, response);
+          const activatedRoute: ActivatedRoute = (<Request>request)
+            .activatedRoute;
+          this._invokeRequest({ ...activatedRoute, route });
+          delete (<Request>request).activatedRoute;
         }
       });
 
-      if (Array.isArray(config.canDeactivate)) {
-        subRouter.use((request: any, response: any, next) =>
-          this._callGuard(
-            request,
-            response,
-            next,
-            "canDeactivate",
-            config.canActivateChild,
-            config
+      if (Array.isArray(route.canDeactivate)) {
+        router.use((request, response, next) =>
+          this._invokeChecks(
+            { request, response, next, route },
+            route.canActivateChild
           )
         );
       }
-      (parent as any)[config.type!.toLowerCase()](
-        normalizePath(config),
-        subRouter
-      );
+      parent[route.type!.toLowerCase()](normalizePath(route), router);
     }
   }
 
-  getToken(guard: any): any {
-    if (
-      guard.constructor.name != "Function" &&
-      !(guard instanceof InjectionToken)
-    )
-      return guard;
-    return this._injector.get(guard);
-  }
-
-  private _callGuard(
-    request: Request,
-    response: Response,
-    next: ɵNextFunction,
-    method: string,
-    guards: any,
-    config?: Route
-  ) {
-    request._config = config;
-    const injector: Injector = request._injector;
-    const obs = andObservables(
-      from([...guards]).pipe(
-        map((c: any) => {
-          const guard = this.getToken(c);
-          let observable: Observable<boolean>;
-          if (guard[method]) {
-            observable = wrapIntoObservable(guard[method](request, response));
-          } else {
-            observable = wrapIntoObservable(guard(request, response));
-          }
-          return observable.pipe(first());
-        })
+  _invokeChecks(activatedRoute: ActivatedRoute, checks: CheckFn[]) {
+    andObservables(
+      from([...checks]).pipe(
+        map(check =>
+          wrapIntoObservable(
+            check(activatedRoute.request, activatedRoute.response)
+          ).pipe(first())
+        )
       )
-    );
-
-    obs.subscribe(() => next());
+    ).subscribe(() => activatedRoute.next());
   }
 
-  private _callRequest(config: Route, request: Request, response: Response) {
-    const parent: Injector = request._injector;
+  _invokeRequest(activatedRoute: ActivatedRoute) {
+    const parent: Injector = activatedRoute.injector;
     parent.get(NgZone).runGuarded(() => {
       const injector = ReflectiveInjector.resolveAndCreate(
-        [config.request!],
+        [activatedRoute.route.request!],
         parent
       );
-      injector.get(config.request);
+      const instance = injector.get(activatedRoute.route.request, activatedRoute.route.request);
+      
+      if ( typeof instance == "function" ) {
+        (<RequestHandlerFn>instance)(activatedRoute.request, activatedRoute.response);
+      } else if ( typeof instance == "object" && typeof (<RequestHandler>instance).handle == "function" ) {
+        (<RequestHandler>instance).handle(activatedRoute.request, activatedRoute.response);
+      }
     });
   }
+}
+
+export interface ActivatedRoute {
+  zone?: NgZone;
+  injector?: Injector;
+  route?: Route;
+  request: Request;
+  response: Response;
+  next: ExpressNextFunction;
 }

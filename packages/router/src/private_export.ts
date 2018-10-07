@@ -1,2 +1,2 @@
-export {  NextFunction as ɵNextFunction, Router as ɵRouter} from 'express'
+export {  NextFunction as ExpressNextFunction, Router as ExpressRouter} from 'express'
 

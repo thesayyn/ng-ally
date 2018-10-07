@@ -1,29 +1,20 @@
 import {
+  APP_INITIALIZER,
   Inject,
   Injector,
   ModuleWithProviders,
   NgModule,
   NgZone,
-  Optional,
-  Type,
-  InjectionToken,
-  APP_INITIALIZER,
-  APP_BOOTSTRAP_LISTENER
+  Optional
 } from "@angular/core";
-import {
-  EXTRA_OPTIONS,
-  ExtraOptions,
-  ROUTER_GUARDS,
-  ROUTES,
-  Route,
-  Routes
-} from "./config";
+import { Guard, ROUTER_GUARDS } from "./checks";
+import { ExtraOptions, EXTRA_OPTIONS, ROUTES, Routes } from "./config";
 import { Router } from "./router";
 import {
   DefaultRouterErrorHandler,
-  ROUTER_ERROR_HANDLER,
   ReportToErrorHandlerStrategy,
   RouterErrorHandlingStrategy,
+  ROUTER_ERROR_HANDLER,
   SendThroughResponseStrategy
 } from "./router_error_handler";
 import { RouterInitializer } from "./router_initializer";
@@ -71,21 +62,17 @@ export class RouterModule {
 }
 
 export const setupRouter = (
-  routes: Route[][],
-  interceptors: Type<any>[],
+  routes: Routes[],
+  guards: Array<Guard>,
   injector: Injector,
   zone: NgZone,
   errorHandling: RouterErrorHandlingStrategy,
   options: ExtraOptions
 ): Router => {
-  return new Router(
-    flatten(routes),
-    interceptors || [],
-    injector,
-    zone,
-    errorHandling,
-    Object.assign({ mergeParams: true }, options)
-  );
+  return new Router(flatten(routes), guards, injector, zone, errorHandling, {
+    ...options,
+    mergeParams: true
+  });
 };
 
 export function provideRoutes(routes: Routes): any {
