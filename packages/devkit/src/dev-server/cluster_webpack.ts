@@ -37,10 +37,11 @@ export class ClusterWebpackPlugin implements webpack.Plugin {
         exec: this._getScript(compilation),
         silent: true
       });
-      cluster.on("online", function(worker) {
+      const onlineHandler = worker => {
         resolve(worker);
-        cluster.removeListener("online", this);
-      });
+        cluster.removeListener("online", onlineHandler);
+      };
+      cluster.on("online", onlineHandler);
       cluster.fork();
     });
   }
@@ -56,7 +57,7 @@ export class ClusterWebpackPlugin implements webpack.Plugin {
           this._logger.info(message.toString());
         });
         this._worker.process.stderr.on("data", message => {
-          this._logger.info(message.toString());
+          this._logger.warn(message.toString());
         });
       });
     });
