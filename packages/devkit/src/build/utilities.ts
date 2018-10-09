@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { tags } from '@angular-devkit/core';
 
 // Force basic color support on terminals with no color support.

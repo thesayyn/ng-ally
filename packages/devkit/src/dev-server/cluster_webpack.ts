@@ -6,6 +6,7 @@ import { logging } from "@angular-devkit/core";
 export class ClusterWebpackPlugin implements webpack.Plugin {
   private _worker: cluster.Worker;
   private _logger: logging.Logger;
+  private _firstRun: boolean = true;
 
   constructor(protected options: ClusterOptions) {
     this._logger = options.logger.createChild("cluster");
@@ -32,11 +33,14 @@ export class ClusterWebpackPlugin implements webpack.Plugin {
     compilation: webpack.compilation.Compilation
   ): Promise<cluster.Worker> {
     return new Promise(resolve => {
-      cluster.setupMaster({
-        ...(this.options as cluster.ClusterSettings),
-        exec: this._getScript(compilation),
-        silent: true
-      });
+      if (this._firstRun) {
+        cluster.setupMaster({
+          ...(this.options as cluster.ClusterSettings),
+          exec: this._getScript(compilation),
+          silent: true
+        });
+        this._firstRun = false;
+      }
       const onlineHandler = worker => {
         resolve(worker);
         cluster.removeListener("online", onlineHandler);
