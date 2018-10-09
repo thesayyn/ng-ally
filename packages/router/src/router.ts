@@ -30,7 +30,7 @@ export class Router {
     private _options: ExtraOptions
   ) {
     this._error.subscribe(context =>
-      _errorHandler.handle(
+      this._errorHandler.handle(
         context.error,
         context.request,
         context.response,
@@ -45,6 +45,7 @@ export class Router {
   resetConfig(): void {
     validateConfig(this.config);
     this.config = this.config.map(copyConfig);
+
     this.config.forEach(route => this._resolveChecks(route));
     this._checks = swallowChecks(
       this._injector,
@@ -54,12 +55,16 @@ export class Router {
   }
 
   registerConfig(): void {
-    if (this._checks.canActivateChecks) {
+    if (
+      this._checks.canActivateChecks &&
+      this._checks.canActivateChecks.length > 0
+    ) {
       this._router.use((request, response, next) => {
         const zone = getZone({ enableLongStackTrace: true });
         zone.onError.subscribe(error =>
           this._error.next({ error, request, response })
         );
+
         this._invokeChecks(
           { request, response, next, zone },
           this._checks.canActivateChecks
@@ -67,12 +72,16 @@ export class Router {
       });
     }
     this.config.forEach(child => this._registerRoutes(child, this._router));
-    if (this._checks.canDeactivateChecks) {
+    if (
+      this._checks.canDeactivateChecks &&
+      this._checks.canDeactivateChecks.length > 0
+    ) {
       this._router.use((request, response, next) => {
         const zone = getZone({ enableLongStackTrace: true });
         zone.onError.subscribe(error =>
           this._error.next({ error, request, response })
         );
+
         this._invokeChecks(
           { request, response, next, zone },
           this._checks.canDeactivateChecks
@@ -114,7 +123,12 @@ export class Router {
     this._zone.runOutsideAngular(() => {
       const zone = getZone({ enableLongStackTrace: true });
       zone.onError.subscribe(error =>
-        this._error.next({ error, request, response, route: (<Request>request).activatedRoute.route })
+        this._error.next({
+          error,
+          request,
+          response,
+          route: (<Request>request).activatedRoute.route
+        })
       );
       zone.runGuarded(() => {
         const injector = Injector.create(
@@ -142,9 +156,13 @@ export class Router {
     if (route.children) {
       const router = this._createRouter();
 
-      if (Array.isArray(route.canActivateChild)) {
+      if (
+        Array.isArray(route.canActivateChild) &&
+        route.canActivateChild.length > 0
+      ) {
         router.use(request => {
           ((<Request>request).activatedRoute as ActivatedRoute).route = route;
+
           this._invokeChecks(
             (<Request>request).activatedRoute,
             route.canActivateChild
@@ -158,9 +176,10 @@ export class Router {
     } else {
       const router = this._createRouter();
 
-      if (Array.isArray(route.canActivate)) {
+      if (Array.isArray(route.canActivate) && route.canActivate.length > 0) {
         router.use(request => {
           ((<Request>request).activatedRoute as ActivatedRoute).route = route;
+
           this._invokeChecks(
             (<Request>request).activatedRoute,
             route.canActivate
@@ -168,23 +187,27 @@ export class Router {
         });
       }
 
-      router.use((request, response, next) => {
+      router.use((request, response) => {
         if (route.redirectTo) {
           response.redirect(route.redirectTo);
         } else {
           ((<Request>request).activatedRoute as ActivatedRoute).route = route;
           (<Request>request).data = route.data;
+
           this._invokeRequest((<Request>request).activatedRoute);
         }
       });
 
-      if (Array.isArray(route.canDeactivate)) {
-        router.use((request, response, next) =>
+      if (
+        Array.isArray(route.canDeactivate) &&
+        route.canDeactivate.length > 0
+      ) {
+        router.use(request => {
           this._invokeChecks(
             (<Request>request).activatedRoute,
             route.canDeactivate
-          )
-        );
+          );
+        });
       }
       parent[route.type!.toLowerCase()](normalizePath(route), router);
     }
