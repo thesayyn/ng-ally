@@ -1,6 +1,10 @@
 import { Injectable, Injector } from "@angular/core";
 import { Db, MongoClient } from "mongodb";
-import { DATABASE_CONFIG } from "./config";
+import {
+  DATABASE_CONFIG,
+  DATABASE_BOOTSTRAP_LISTENER,
+  DATABASE_FAILURE_LISTENER
+} from "./config";
 
 @Injectable()
 export class DatabaseInitializer {
@@ -22,8 +26,22 @@ export class DatabaseInitializer {
       MongoClient.connect(uri)
         .then(client => client.db(config.database)!)
         .then(db => (this.instance = db))
-        .then(() => resolve())
-        .catch(() => resolve());
+        .then(() => {
+          resolve();
+          const bootstrapListeners = this.injector.get(
+            DATABASE_BOOTSTRAP_LISTENER,
+            []
+          );
+          bootstrapListeners.forEach(l => l());
+        })
+        .catch(() => {
+          resolve();
+          const failListeners = this.injector.get(
+            DATABASE_FAILURE_LISTENER,
+            []
+          );
+          failListeners.forEach(l => l());
+        });
     });
   }
 

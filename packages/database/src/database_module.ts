@@ -1,4 +1,9 @@
-import { APP_INITIALIZER, ModuleWithProviders, NgModule } from "@angular/core";
+import {
+  APP_INITIALIZER,
+  Injector,
+  ModuleWithProviders,
+  NgModule
+} from "@angular/core";
 import { DatabaseConfig, DATABASE_CONFIG } from "./config";
 import { DatabaseInitializer } from "./database_initializer";
 import { DatabaseService } from "./database_service";
@@ -9,7 +14,11 @@ export class DatabaseModule {
     return {
       ngModule: DatabaseModule,
       providers: [
-        DatabaseInitializer,
+        {
+          provide: DatabaseInitializer,
+          useClass: DatabaseInitializer,
+          deps: [Injector]
+        },
         { provide: DATABASE_CONFIG, useValue: config },
         {
           provide: DatabaseService,

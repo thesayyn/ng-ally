@@ -13,3 +13,10 @@ export interface DatabaseConfig {
 export const DATABASE_CONFIG = new InjectionToken<DatabaseConfig>(
   "DATABASE_CONFIG"
 );
+
+export const DATABASE_BOOTSTRAP_LISTENER = new InjectionToken<() => void>(
+  "DATABASE_BOOTSTRAP_LISTENER"
+);
+export const DATABASE_FAILURE_LISTENER = new InjectionToken<() => void>(
+  "DATABASE_FAILURE_LISTENER"
+);
