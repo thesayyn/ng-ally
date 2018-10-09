@@ -1,6 +1,6 @@
 import { Injector, NgZone, ReflectiveInjector } from "@angular/core";
-import { from } from "rxjs";
-import { first, map } from "rxjs/operators";
+import { from, Subject } from "rxjs";
+import { filter, first, map } from "rxjs/operators";
 import { CheckFn, Checks, Guard, resolveChecks, swallowChecks } from "./checks";
 import {
   copyConfig,
@@ -10,7 +10,7 @@ import {
   Routes,
   validateConfig
 } from "./config";
-import { Request, Response, RequestHandlerFn, RequestHandler } from "./http";
+import { Request, RequestHandler, RequestHandlerFn, Response } from "./http";
 import { ExpressNextFunction, ExpressRouter } from "./private_export";
 import { RouterErrorHandlingStrategy } from "./router_error_handler";
 import { andObservables, wrapIntoObservable } from "./utils";
@@ -19,6 +19,7 @@ import { getZone } from "./zone";
 export class Router {
   private _router: ExpressRouter;
   private _checks: Checks;
+  private _error: Subject<ErrorContext> = new Subject<ErrorContext>();
 
   constructor(
     private config: Routes,
@@ -28,6 +29,14 @@ export class Router {
     private _errorHandler: RouterErrorHandlingStrategy,
     private _options: ExtraOptions
   ) {
+    this._error.subscribe(context =>
+      _errorHandler.handle(
+        context.error,
+        context.request,
+        context.response,
+        context.route
+      )
+    );
     this.resetConfig();
     this._router = this._createRouter();
     this.registerConfig();
@@ -47,8 +56,12 @@ export class Router {
   registerConfig(): void {
     if (this._checks.canActivateChecks) {
       this._router.use((request, response, next) => {
+        const zone = getZone({ enableLongStackTrace: true });
+        zone.onError.subscribe(error =>
+          this._error.next({ error, request, response })
+        );
         this._invokeChecks(
-          { request, response, next, route: undefined },
+          { request, response, next, zone },
           this._checks.canActivateChecks
         );
       });
@@ -56,8 +69,12 @@ export class Router {
     this.config.forEach(child => this._registerRoutes(child, this._router));
     if (this._checks.canDeactivateChecks) {
       this._router.use((request, response, next) => {
+        const zone = getZone({ enableLongStackTrace: true });
+        zone.onError.subscribe(error =>
+          this._error.next({ error, request, response })
+        );
         this._invokeChecks(
-          { request, response, next, route: undefined },
+          { request, response, next, zone },
           this._checks.canDeactivateChecks
         );
       });
@@ -96,14 +113,9 @@ export class Router {
   ) {
     this._zone.runOutsideAngular(() => {
       const zone = getZone({ enableLongStackTrace: true });
-      zone.onError.subscribe((error: any) => {
-        this._errorHandler.handle(
-          request.activatedRoute.route,
-          request,
-          response,
-          error
-        );
-      });
+      zone.onError.subscribe(error =>
+        this._error.next({ error, request, response, route: (<Request>request).activatedRoute.route })
+      );
       zone.runGuarded(() => {
         const injector = Injector.create(
           [
@@ -115,7 +127,7 @@ export class Router {
         );
         request.activatedRoute = <ActivatedRoute>{
           route: undefined,
-          injector: injector,
+          injector,
           next,
           request,
           response,
@@ -131,12 +143,13 @@ export class Router {
       const router = this._createRouter();
 
       if (Array.isArray(route.canActivateChild)) {
-        router.use((request, response, next) =>
+        router.use(request => {
+          ((<Request>request).activatedRoute as ActivatedRoute).route = route;
           this._invokeChecks(
-            { request, response, next, route },
+            (<Request>request).activatedRoute,
             route.canActivateChild
-          )
-        );
+          );
+        });
       }
 
       route.children.forEach(child => this._registerRoutes(child, router));
@@ -146,30 +159,30 @@ export class Router {
       const router = this._createRouter();
 
       if (Array.isArray(route.canActivate)) {
-        router.use((request, response, next) =>
+        router.use(request => {
+          ((<Request>request).activatedRoute as ActivatedRoute).route = route;
           this._invokeChecks(
-            { request, response, next, route },
-            route.canActivateChild
-          )
-        );
+            (<Request>request).activatedRoute,
+            route.canActivate
+          );
+        });
       }
 
       router.use((request, response, next) => {
         if (route.redirectTo) {
           response.redirect(route.redirectTo);
         } else {
-          const activatedRoute: ActivatedRoute = (<Request>request)
-            .activatedRoute;
-          this._invokeRequest({ ...activatedRoute, route });
-          delete (<Request>request).activatedRoute;
+          ((<Request>request).activatedRoute as ActivatedRoute).route = route;
+          (<Request>request).data = route.data;
+          this._invokeRequest((<Request>request).activatedRoute);
         }
       });
 
       if (Array.isArray(route.canDeactivate)) {
         router.use((request, response, next) =>
           this._invokeChecks(
-            { request, response, next, route },
-            route.canActivateChild
+            (<Request>request).activatedRoute,
+            route.canDeactivate
           )
         );
       }
@@ -178,30 +191,45 @@ export class Router {
   }
 
   _invokeChecks(activatedRoute: ActivatedRoute, checks: CheckFn[]) {
-    andObservables(
-      from([...checks]).pipe(
-        map(check =>
-          wrapIntoObservable(
-            check(activatedRoute.request, activatedRoute.response)
-          ).pipe(first())
+    activatedRoute.zone.runGuarded(() => {
+      andObservables(
+        from(checks).pipe(
+          map(check =>
+            wrapIntoObservable(
+              check(activatedRoute.request, activatedRoute.response)
+            ).pipe(first())
+          )
         )
       )
-    ).subscribe(() => activatedRoute.next());
+        .pipe(filter(r => r))
+        .subscribe(() => activatedRoute.next());
+    });
   }
 
   _invokeRequest(activatedRoute: ActivatedRoute) {
-    const parent: Injector = activatedRoute.injector;
-    parent.get(NgZone).runGuarded(() => {
+    activatedRoute.zone.runGuarded(() => {
       const injector = ReflectiveInjector.resolveAndCreate(
         [activatedRoute.route.request!],
-        parent
+        activatedRoute.injector
       );
-      const instance = injector.get(activatedRoute.route.request, activatedRoute.route.request);
-      
-      if ( typeof instance == "function" ) {
-        (<RequestHandlerFn>instance)(activatedRoute.request, activatedRoute.response);
-      } else if ( typeof instance == "object" && typeof (<RequestHandler>instance).handle == "function" ) {
-        (<RequestHandler>instance).handle(activatedRoute.request, activatedRoute.response);
+      const instance = injector.get(
+        activatedRoute.route.request,
+        activatedRoute.route.request
+      );
+
+      if (typeof instance == "function") {
+        (<RequestHandlerFn>instance)(
+          activatedRoute.request,
+          activatedRoute.response
+        );
+      } else if (
+        typeof instance == "object" &&
+        typeof (<RequestHandler>instance).handle == "function"
+      ) {
+        (<RequestHandler>instance).handle(
+          activatedRoute.request,
+          activatedRoute.response
+        );
       }
     });
   }
@@ -214,4 +242,11 @@ export interface ActivatedRoute {
   request: Request;
   response: Response;
   next: ExpressNextFunction;
+}
+
+export interface ErrorContext {
+  error: any;
+  request: Request;
+  response: Response;
+  route?: Route;
 }

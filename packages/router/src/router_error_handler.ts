@@ -2,15 +2,19 @@ import { Injectable, InjectionToken, Injector } from "@angular/core";
 import { Request, Response } from "./http";
 import { Route } from "./config";
 
-export abstract class RouterErrorHandler {
-  abstract handle(error: any): void;
-  abstract handle(error: any, response: Response);
-  abstract handle(error: any, request: Request, response: Response): void;
-  abstract handle(error: any, request: Request, response: Response, route: Route | undefined): void;
+export interface RouterErrorHandler {
+  handle(error: any, request: Request, response: Response, route?: Route): void;
 }
 
 export class DefaultRouterErrorHandler implements RouterErrorHandler {
-  handle(error: any): void {}
+  handle(
+    error: any,
+    request: Request,
+    response: Response,
+    route?: Route
+  ): void {
+    throw error;
+  }
 }
 
 export const ROUTER_ERROR_HANDLER = new InjectionToken<RouterErrorHandler>(
@@ -25,18 +29,20 @@ export function noErrorHandlerError() {
   return new Error("No error handler specified.");
 }
 
-export abstract class RouterErrorHandlingStrategy {
+export abstract class RouterErrorHandlingStrategy
+  implements RouterErrorHandler {
   abstract handle(
-    route: Route,
+    error: any,
     request: Request,
     response: Response,
-    error: any
-  );
+    route?: Route
+  ): void;
 }
 
 @Injectable()
-export class SendThroughResponseStrategy implements RouterErrorHandlingStrategy {
-  handle(route: Route, request: Request, response: Response, error: any) {
+export class SendThroughResponseStrategy
+  implements RouterErrorHandlingStrategy {
+  handle(error: any, request: Request, response: Response, route: Route) {
     response.send({
       code: 500,
       message: error instanceof Error ? error.message : error,
@@ -46,17 +52,14 @@ export class SendThroughResponseStrategy implements RouterErrorHandlingStrategy 
 }
 
 @Injectable()
-export class ReportToErrorHandlerStrategy implements RouterErrorHandlingStrategy {
-  constructor(
-    private defaultErrorHandler: RouterErrorHandler,
-    private injector: Injector
-  ) {}
+export class ReportToErrorHandlerStrategy
+  implements RouterErrorHandlingStrategy {
+  constructor(private injector: Injector) {}
 
-  handle(config: Route, request: Request, response: Response, error: any) {
-    const handler: RouterErrorHandler =
-      config && config.errorHandler
-        ? this.injector.get(config.errorHandler)
-        : this.defaultErrorHandler;
+  handle(error: any, request: Request, response: Response, route?: Route) {
+    const routeHandler =
+      route && route.errorHandler ? route.errorHandler : ROUTER_ERROR_HANDLER;
+    const handler = this.injector.get(routeHandler);
     handler.handle(error, request, response);
   }
 }

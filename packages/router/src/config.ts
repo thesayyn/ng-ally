@@ -1,5 +1,6 @@
 import { InjectionToken, Type } from "@angular/core";
-import { RequestHandler, RequestHandlerFn } from './http';
+import { RequestHandler, RequestHandlerFn } from "./http";
+import { RouterErrorHandler } from "./router_error_handler";
 
 export type Routes = Route[];
 
@@ -8,7 +9,7 @@ export const ROUTES = new InjectionToken<Route[][]>("ROUTES");
 export interface Route {
   path: string;
   type?: Method;
-  errorHandler?: Type<any>;
+  errorHandler?: Type<RouterErrorHandler>;
   request?: Type<RequestHandler> | RequestHandlerFn | any;
   redirectTo?: string;
   canActivate?: any[];

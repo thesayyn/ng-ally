@@ -87,7 +87,7 @@ export function provideErrorHandlingStrategy(config: ExtraOptions) {
         config.errorHandlingStrategy == "sendThroughResponse"
           ? SendThroughResponseStrategy
           : ReportToErrorHandlerStrategy,
-      deps: [[new Inject(ROUTER_ERROR_HANDLER)], Injector]
+      deps: [Injector]
     }
   ];
 }

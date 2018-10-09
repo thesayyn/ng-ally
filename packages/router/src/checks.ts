@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { InjectionToken, Injector, Type } from "@angular/core";
-import { Request, Response } from './http';
+import { Request, Response } from "./http";
 
 export interface CanActivate {
   canActivate: CheckFn;
@@ -41,10 +41,14 @@ export function swallowChecks(
 
     if (typeof instanceOrFn != "function") {
       if ((<CanActivate>instanceOrFn).canActivate) {
-        checks.canActivateChecks.push(instanceOrFn.canActivate);
+        checks.canActivateChecks.push(
+          (<CheckFn>instanceOrFn.canActivate).bind(instanceOrFn)
+        );
       }
       if ((<CanDeactivate>instanceOrFn).canDeactivate) {
-        checks.canDeactivateChecks.push(instanceOrFn.canDeactivate);
+        checks.canDeactivateChecks.push(
+          (<CheckFn>instanceOrFn.canDeactivate).bind(instanceOrFn)
+        );
       }
     } else {
       checks[`${forceFnTo}Checks`].push(instanceOrFn);
@@ -61,9 +65,8 @@ export function resolveChecks(
 ): CheckFn[] {
   return guards.map(guard => {
     const instanceOrFn = injector.get(guard, guard);
-
     return typeof instanceOrFn != "function" && instanceOrFn[checkFn]
-      ? instanceOrFn[checkFn]
+      ? (<CheckFn>instanceOrFn[checkFn]).bind(instanceOrFn)
       : instanceOrFn;
   });
 }

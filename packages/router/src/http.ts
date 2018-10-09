@@ -4,6 +4,7 @@ import {
 } from "express";
 
 export abstract class Request {
+  data?: any;
   [key: string]: any;
 }
 
@@ -15,7 +16,7 @@ export interface Request extends ExpressRequest {}
 export interface Response extends ExpressResponse {}
 
 export interface RequestHandler {
-  handle: RequestHandlerFn;
+  handle(request: Request, response: Response): void;
 }
 
 export type RequestHandlerFn = (request: Request, response: Response) => void;
