@@ -1,10 +1,10 @@
-import * as chalk from 'chalk';
 import { tags } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 
 // Force basic color support on terminals with no color support.
 // Chalk typings don't have the correct constructor parameters.
-const chalkCtx = new (chalk.constructor as any)(chalk.supportsColor ? {} : { level: 1 });
-const { bold, green, red, reset, white, yellow } = chalkCtx;
+const chalkCtx = new (chalk.constructor as any)(chalk['supportsColor'] ? {} : { level: 1 });
+const { bold, green, reset, white, yellow } = chalkCtx;
 
 export function formatSize(size: number): string {
     if (size <= 0) {
