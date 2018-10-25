@@ -1,4 +1,4 @@
-import { Injectable, Injector } from "@angular/core";
+import { Injectable, Injector, isDevMode } from "@angular/core";
 import { Db, MongoClient } from "mongodb";
 import {
   DATABASE_CONFIG,
@@ -14,14 +14,19 @@ export class DatabaseInitializer {
 
   databaseInitializer(): Promise<void> {
     const config = this.injector.get(DATABASE_CONFIG);
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       7;
-      let uri = "mongodb://";
+      let uri = `${config.protocol || "mongodb"}://`;
       if ("username" in config && "password" in config) {
-        uri += `${config.username!}:${config.password!}`;
+        uri += `${config.username!}:${config.password!}@`;
       }
-      config.port = config.port || 27017;
-      uri += `${config.host!}:${config.port!}/${config.database!}`;
+      if (config.port) {
+        uri += `${config.host!}:${config.port!}/${config.database!}`;
+      } else {
+        uri += `${config.host!}/${config.database!}`;
+      }
+
+      uri += config.additionalQueryString;
 
       MongoClient.connect(uri)
         .then(client => client.db(config.database)!)
@@ -32,15 +37,23 @@ export class DatabaseInitializer {
             DATABASE_BOOTSTRAP_LISTENER,
             []
           );
-          bootstrapListeners.forEach(l => l());
+          bootstrapListeners
+            .filter(l => typeof l === "function")
+            .forEach(l => l());
         })
-        .catch(() => {
+        .catch(error => {
           resolve();
           const failListeners = this.injector.get(
             DATABASE_FAILURE_LISTENER,
             []
           );
-          failListeners.forEach(l => l());
+          failListeners
+            .filter(l => typeof l === "function")
+            .forEach(l => l(error));
+          if (isDevMode()) {
+            console.info(`URI: ${uri}`);
+            console.error(error);
+          }
         });
     });
   }
