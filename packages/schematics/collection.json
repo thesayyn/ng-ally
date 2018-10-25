@@ -15,7 +15,13 @@
     "application": {
       "factory": "./application",
       "schema": "./application/schema.json",
-      "description": "Create an Angular application."
+      "description": "Create an NgAlly application."
+    },
+    "module": {
+      "aliases": [ "m" ],
+      "factory": "./module",
+      "description": "Create an Angular module.",
+      "schema": "./module/schema.json"
     }
   }
 }

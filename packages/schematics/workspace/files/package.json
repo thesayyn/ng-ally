@@ -20,6 +20,7 @@
     "@angular/cli": "<%= latestVersions.Angular %>",
     "@angular/compiler-cli": "<%= latestVersions.Angular %>",
     "@ng-ally/devkit": "<%= latestVersions.NgAlly %>",
+    "@ng-ally/schematics": "<%= latestVersions.NgAlly %>",
     "typescript": "<%= latestVersions.TypeScript %>",
     "@types/node": "*",
     "@types/mongodb": "*",

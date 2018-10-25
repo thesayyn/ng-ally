@@ -4,7 +4,7 @@
     "module": "commonjs",
     "strictNullChecks": true,
     "inlineSources": false,
-    "target": "es2016",
+    "target": "es2015",
     "baseUrl": ".",
     "rootDir": ".",
     "declaration": true,
