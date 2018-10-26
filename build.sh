@@ -9,6 +9,7 @@ PACKAGES=(
   platform-server
   router
   database
+  storage
   devkit
   schematics
 )

@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig-build.json",
+
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@ng-ally/platform-server": ["../../dist/packages-dist/platform-server"]
+    },
+    "outDir": "../../dist/packages/storage"
+  },
+
+  "files": [
+    "public_api.ts"
+  ],
+
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": true,
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "flatModuleOutFile": "storage.js",
+    "flatModuleId": "@ng-ally/storage"
+  }
+}

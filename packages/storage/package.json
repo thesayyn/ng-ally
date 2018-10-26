@@ -1,0 +1,7 @@
+{
+    "name": "@ng-ally/storage",
+    "version": "0.0.0-PLACEHOLDER",
+    "module": "./esm5/storage.js",
+    "es2015": "./esm2015/storage.js",
+    "typings": "./storage.d.ts"
+}
