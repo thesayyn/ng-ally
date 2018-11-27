@@ -20,7 +20,7 @@ export interface ReadonlyHost<StatsT extends object = {}> {
   exists(path: Path): Promise<boolean>;
   isDirectory(path: Path): Promise<boolean>;
   isFile(path: Path): Promise<boolean>;
-  url(): Promise<URL | null>;
+  url(path: Path): Promise<URL | null>;
   // Some hosts may not support stats.
   stat(path: Path): Promise<Stats<StatsT> | null> | null;
 }

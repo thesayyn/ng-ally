@@ -49,7 +49,7 @@ export class NodeHost implements Host {
   }
   read(path: Path): Promise<FileBuffer> {
     return _callFs(fs.readFile, path).then(
-      buffer => new Uint8Array(buffer).buffer
+      buffer => new Uint8Array(buffer as any).buffer
     );
   }
   list(path: Path): Promise<PathFragment[]> {
@@ -69,7 +69,7 @@ export class NodeHost implements Host {
   stat(path: Path): Promise<Stats> {
     return _callFs(fs.stat, path);
   }
-  url(): Promise<URL> {
+  url(path: Path): Promise<URL> {
     throw new Error("Url method not supported on local.");
   }
 }
