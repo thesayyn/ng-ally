@@ -53,7 +53,7 @@ export class NodeHost implements Host {
     );
   }
   list(path: Path): Promise<PathFragment[]> {
-    return _callFs(fs.readdir, path) as Promise<PathFragment[]>;
+    return _callFs(fs.readdir, path) as any as Promise<PathFragment[]>;
   }
   exists(path: Path): Promise<boolean> {
     return new Promise(resolve => {
