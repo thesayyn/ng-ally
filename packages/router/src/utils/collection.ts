@@ -1,6 +1,6 @@
 import { ɵisObservable as isObservable, ɵisPromise as isPromise } from '@angular/core';
 import { Observable, from, of} from "rxjs";
-import { mergeAll, every } from "rxjs/operators";
+import { every, concatAll } from "rxjs/operators";
 
 
 /**
@@ -16,7 +16,7 @@ export function flatten<T>(arr: T[][]): T[] {
  * input Observables return `true`.
  */
 export function andObservables(observables: Observable<Observable<any>>): Observable<boolean> {
-  return observables.pipe(mergeAll(), every((result: any) => result === true));
+  return observables.pipe(concatAll(), every((result: any) => result === true));
 }
  
 export function wrapIntoObservable<T>(value: T |  Promise<T>| Observable<T>):
