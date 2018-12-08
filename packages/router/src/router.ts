@@ -160,13 +160,10 @@ export class Router {
         Array.isArray(route.canActivateChild) &&
         route.canActivateChild.length > 0
       ) {
-        router.use(request => {
-          ((<Request>request).activatedRoute as ActivatedRoute).route = route;
-
-          this._invokeChecks(
-            (<Request>request).activatedRoute,
-            route.canActivateChild
-          );
+        router.use((request: Request, _: Response, next: Function) => {
+          request.activatedRoute.route = route;
+          request.activatedRoute.next = next;
+          this._invokeChecks(request.activatedRoute, route.canActivateChild);
         });
       }
 
@@ -177,24 +174,22 @@ export class Router {
       const router = this._createRouter();
 
       if (Array.isArray(route.canActivate) && route.canActivate.length > 0) {
-        router.use(request => {
-          ((<Request>request).activatedRoute as ActivatedRoute).route = route;
-
-          this._invokeChecks(
-            (<Request>request).activatedRoute,
-            route.canActivate
-          );
+        router.use((request: Request, _, next: Function) => {
+          request.activatedRoute.route = route;
+          request.activatedRoute.next = next;
+          this._invokeChecks(request.activatedRoute, route.canActivate);
         });
       }
 
-      router.use((request, response) => {
+      router.use((request: Request, response: Response, next: Function) => {
         if (route.redirectTo) {
           response.redirect(route.redirectTo);
         } else {
-          ((<Request>request).activatedRoute as ActivatedRoute).route = route;
-          (<Request>request).data = route.data;
+          request.activatedRoute.next = next;
+          request.activatedRoute.route = route;
+          request.data = route.data;
 
-          this._invokeRequest((<Request>request).activatedRoute);
+          this._invokeRequest(request.activatedRoute);
         }
       });
 
@@ -202,11 +197,9 @@ export class Router {
         Array.isArray(route.canDeactivate) &&
         route.canDeactivate.length > 0
       ) {
-        router.use(request => {
-          this._invokeChecks(
-            (<Request>request).activatedRoute,
-            route.canDeactivate
-          );
+        router.use((request: Request, _, next: Function) => {
+          request.activatedRoute.next = next;
+          this._invokeChecks(request.activatedRoute, route.canDeactivate);
         });
       }
       parent[route.type!.toLowerCase()](normalizePath(route), router);

@@ -1,14 +1,28 @@
 import { Injector } from "@angular/core";
 import { Partition, StorageConfig, STORAGE_PARTITION } from "./config";
 import { FileBuffer, Host, Stats } from "./host";
-import { Path, PathFragment } from "./path";
+import { Path, PathFragment, URL } from "./path";
 
 export class Storage {
+
   constructor(
     private injector: Injector,
     private config: StorageConfig,
     private hostMap: Map<string, any>
   ) {}
+
+  write(path: Path, content: ArrayBuffer, storage?: string): Promise<void> {
+    const partition = this._getPartition(storage);
+    const host = this._getHost(partition);
+    return host.write(path, content);
+  }
+
+  url(path: Path, storage?: string): Promise<URL> {
+    const partition = this._getPartition(storage);
+    const host = this._getHost(partition);
+    return host.url(path);
+  }
+
 
   list(path: Path, storage?: string): Promise<PathFragment[]> {
     const partition = this._getPartition(storage);
