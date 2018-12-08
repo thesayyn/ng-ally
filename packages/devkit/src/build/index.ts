@@ -136,9 +136,13 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
 
     if (options.fileReplacements) {
       for (const replacement of options.fileReplacements) {
-        hostReplacementPaths[replacement.replace] = replacement.with;
+        const replace = getSystemPath(normalize(resolve(root, normalize(replacement.replace))));
+        hostReplacementPaths[replace] = getSystemPath(normalize(resolve(root, normalize(replacement.with))));
       }
     }
+
+
+    console.log(hostReplacementPaths);
 
     if (options.main) {
       this.entrypoints.main = this.entrypoints.main || [];
@@ -170,10 +174,6 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       },
       module: {
         rules: [
-          /*{
-            test: /\.node$/,
-            loader: "node-loader"
-          },*/
           {
             // Mark files inside `@angular/core` as using SystemJS style dynamic imports.
             // Removing this will cause deprecation warnings to appear.
@@ -202,7 +202,10 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
           hostReplacementPaths,
           skipCodeGeneration: true,
           platform: PLATFORM.Server,
-          sourceMap: options.sourceMap
+          sourceMap: options.sourceMap,
+          compilerOptions: {
+            preserveSymlinks: options.preserveSymlinks
+          }
         }),
         new StringEntriesWebpackPlugin({
           [options.outputName]: tags.stripIndents`
