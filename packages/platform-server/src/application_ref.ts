@@ -1,7 +1,8 @@
 import { Injectable, Injector, APP_BOOTSTRAP_LISTENER } from "@angular/core";
 import {
-  APP_PORT,
-  APP_HOST,
+  HTTP_HOST,
+  HTTP_PORT,
+  HTTP_UNIX_SOCKET,
   EXPRESS_APP,
   HTTP_SERVER
 } from "./application_tokens";
@@ -12,13 +13,23 @@ export class ServerApplicationRef {
     //Just for running dependency injection tree.
     injector.get(EXPRESS_APP);
 
-    const host = injector.get(APP_HOST, process.argv[2] || "0.0.0.0"),
-          port = injector.get(APP_PORT, process.argv[3] || 4300);
-    const http = injector.get(HTTP_SERVER);
+    const host = injector.get(HTTP_HOST),
+      port = injector.get(HTTP_PORT),
+      unixSocket = injector.get(HTTP_UNIX_SOCKET),
+      http = injector.get(HTTP_SERVER);
 
-    http.listen({ host, port }, () =>
-      this.injector.get(APP_BOOTSTRAP_LISTENER, []).forEach(l => l(undefined))
-    );
+    const listenerCallback = () =>
+      this.injector.get(APP_BOOTSTRAP_LISTENER, []).forEach(l => l(undefined));
+
+    if (host && port) {
+      http.listen({ host, port }, listenerCallback);
+    } else if (unixSocket) {
+      http.listen(unixSocket, listenerCallback);
+    } else {
+      throw new Error(
+        "No way to listen http server because whether host-port or socket did not provided."
+      );
+    }
   }
 
   ngOnDestroy() {

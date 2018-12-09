@@ -9,12 +9,21 @@ export interface ServerBuilderSchema {
   watch: boolean;
   poll: number;
   progress?: boolean;
+  outputHashing: OutputHashing;
   verbose: boolean;
   sourceMap: boolean;
   optimization?: boolean;
   fileReplacements: FileReplacement[];
   extractLicenses: boolean;
+  extractDependencies: boolean;
   deleteOutputPath: boolean;
+}
+
+export enum OutputHashing {
+  All = 'all',
+  Bundles = 'bundles',
+  Media = 'media',
+  None = 'none',
 }
 
 export interface AssetPattern {

@@ -4,8 +4,8 @@ import { Server } from 'http';
 
 
 export const EXPRESS_APP = new InjectionToken<Express>('EXPRESS_APP');
-export const SOCKETIO_APP = new InjectionToken<Express>('SOCKETIO_APP');
 export const HTTP_SERVER = new InjectionToken<Server>('HTTP_SERVER');
 
-export const APP_HOST = new InjectionToken<string>('Application Host');
-export const APP_PORT = new InjectionToken<number>('Application Port');
+export const HTTP_HOST = new InjectionToken<string>('HTTP_HOST');
+export const HTTP_PORT = new InjectionToken<number>('HTTP_PORT');
+export const HTTP_UNIX_SOCKET = new InjectionToken<number>('HTTP_UNIX_SOCKET');

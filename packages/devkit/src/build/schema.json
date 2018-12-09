@@ -66,6 +66,17 @@
       "type": "boolean",
       "description": "Log progress to the console while building."
     },
+    "outputHashing": {
+      "type": "string",
+      "description": "Define the output filename cache-busting hashing mode.",
+      "default": "none",
+      "enum": [
+        "none",
+        "all",
+        "media",
+        "bundles"
+      ]
+    },
     "verbose": {
       "type": "boolean",
       "description": "Adds more details to output logging."
@@ -77,6 +88,10 @@
     "extractLicenses": {
       "type": "boolean",
       "description": "Extract all licenses in a separate file, in the case of production builds only."
+    },
+    "extractDependencies": {
+      "type": "boolean",
+      "description": "Extract package.json file to dist dir, in the case of production builds only."
     }
   },
   "additionalProperties": false,

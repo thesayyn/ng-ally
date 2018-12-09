@@ -12,6 +12,7 @@ PACKAGES=(
   storage
   devkit
   schematics
+  socket
 )
 
 TSC_PACKAGES=(

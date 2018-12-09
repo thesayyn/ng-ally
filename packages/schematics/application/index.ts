@@ -95,8 +95,10 @@ function addAppToWorkspaceFile(
             ],
             optimization: true,
             sourceMap: false,
+            outputHashing: "all",
             deleteOutputPath: true,
-            extractLicenses: true
+            extractLicenses: true,
+            extractDependencies: true
           }
         }
       },

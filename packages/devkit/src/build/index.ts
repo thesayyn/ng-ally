@@ -1,85 +1,109 @@
-import { Builder, BuilderConfiguration, BuilderContext, BuildEvent } from "@angular-devkit/architect";
-import { getSystemPath, normalize, Path, resolve, tags } from "@angular-devkit/core";
+import {
+  Builder,
+  BuilderConfiguration,
+  BuilderContext,
+  BuildEvent
+} from "@angular-devkit/architect";
+import {
+  getSystemPath,
+  normalize,
+  Path,
+  resolve,
+  tags,
+  virtualFs
+} from "@angular-devkit/core";
 import { AngularCompilerPlugin, PLATFORM } from "@ngtools/webpack";
 import * as CopyWebpackPlugin from "copy-webpack-plugin";
 import { LicenseWebpackPlugin } from "license-webpack-plugin";
-import { Observable } from "rxjs";
+import { Observable, concat, of } from "rxjs";
+import { concatMap, last, tap } from "rxjs/operators";
 import * as webpack from "webpack";
 import * as WebpackNodeExternals from "webpack-node-externals";
 import * as ProgressPlugin from "webpack/lib/ProgressPlugin";
 import { AssetPattern, ServerBuilderSchema } from "./schema";
-import { StringEntriesWebpackPlugin } from "./string_entry";
-import { statsToString } from "./utilities";
+import { ChunkMergeWebpackPlugin } from "./chunk_merge";
+import { statsToString, getOutputHashFormat } from "./utilities";
 
 export class ServerBuilder implements Builder<ServerBuilderSchema> {
-
   public plugins: webpack.Plugin[] = [];
-  public entrypoints: { [key: string]: string[] } = {}
-  
+  public entrypoints: { [key: string]: string[] } = {};
+
   constructor(public context: BuilderContext) {}
 
   run(
     builderConfig: BuilderConfiguration<ServerBuilderSchema>
   ): Observable<BuildEvent> {
-    return new Observable(observer => {
-      const options = builderConfig.options;
-      const root = this.context.workspace.root;
-      const config = this.buildWebpackConfig(root, builderConfig.options);
-      const compiler = webpack(config);
+    const options = builderConfig.options;
+    const root = this.context.workspace.root;
+    const config = this.buildWebpackConfig(root, builderConfig.options);
+    return of(null).pipe(
+      concatMap(() =>
+        options.deleteOutputPath
+          ? this._deleteOutputDir(root, normalize(options.outputPath), this
+              .context.host as any)
+          : of(null)
+      ),
+      concatMap(
+        () =>
+          new Observable(observer => {
+            const compiler = webpack(config);
 
+            const callback = (err, stats) => {
+              if (err) this.context.logger.error(err.message);
 
-      const callback = (err, stats) => {
-        if (err) this.context.logger.error(err.message);
+              const statsConfig = {
+                colors: true,
+                hash: true,
+                timings: true,
+                chunks: true,
+                chunkModules: false,
+                children: false,
+                modules: false,
+                reasons: false,
+                warnings: true,
+                errors: true,
+                assets: true,
+                version: false,
+                errorDetails: false,
+                moduleTrace: false
+              };
 
-        const statsConfig = {
-          colors: true,
-          hash: true,
-          timings: true,
-          chunks: true,
-          chunkModules: false,
-          children: false,
-          modules: false,
-          reasons: false,
-          warnings: true,
-          errors: true,
-          assets: true,
-          version: false,
-          errorDetails: false,
-          moduleTrace: false
-        };
+              const statsJson = stats.toJson(statsConfig);
+              this.context.logger.info(statsToString(statsJson, statsConfig));
 
-        const statsJson = stats.toJson(statsConfig);
-        this.context.logger.info(statsToString(statsJson, statsConfig));
+              if (stats.hasWarnings()) {
+                this.context.logger.warn(
+                  statsJson.warnings.map(
+                    (warning: any) => `WARNING in ${warning}`
+                  )
+                );
+              }
+              if (stats.hasErrors()) {
+                this.context.logger.error(
+                  statsJson.errors
+                    .map((error: any) => `ERROR in ${error}`)
+                    .join("\n\n")
+                );
+              }
 
-        if (stats.hasWarnings()) {
-          this.context.logger.warn(
-            statsJson.warnings.map((warning: any) => `WARNING in ${warning}`)
-          );
-        }
-        if (stats.hasErrors()) {
-          this.context.logger.error(
-            statsJson.errors
-              .map((error: any) => `ERROR in ${error}`)
-              .join("\n\n")
-          );
-        }
+              if (options.watch) {
+                observer.next({ success: !stats.hasErrors() });
+                return;
+              } else {
+                observer.next({ success: !stats.hasErrors() });
+                observer.complete();
+              }
+            };
 
-        if (options.watch) {
-          observer.next({ success: !stats.hasErrors() });
-          return;
-        } else {
-          observer.next({ success: !stats.hasErrors() });
-          observer.complete();
-        }
-      };
-
-      if (options.watch) {
-        const watching = compiler.watch({ poll: options.poll }, callback);
-        return () => watching.close(() => {});
-      } else {
-        compiler.run(callback);
-      }
-    });
+            if (options.watch) {
+              const watching = compiler.watch({ poll: options.poll }, callback);
+              return () => watching.close(() => {});
+            } else {
+              compiler.run(callback);
+            }
+          })
+      )
+    );
   }
 
   buildWebpackConfig(
@@ -88,8 +112,11 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
   ): webpack.Configuration {
     let extraPlugins: webpack.Plugin[] = [];
 
+    const hashFormat = getOutputHashFormat(options.outputHashing || "none");
+
+    let assets: any[] = [];
     if (options.assets) {
-      const assets = options.assets.map((asset: AssetPattern) => {
+      assets = options.assets.map((asset: AssetPattern) => {
         return {
           context: asset.input,
           to: asset.output,
@@ -99,6 +126,13 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
           }
         };
       });
+    }
+
+    if (options.extractDependencies) {
+      assets = [...assets, { from: "./package.json", to: "./package.json" }];
+    }
+
+    if (options.assets || options.extractDependencies) {
       extraPlugins.push(
         new CopyWebpackPlugin(assets, {
           ignore: [".gitkeep", "**/.DS_Store", "**/Thumbs.db"]
@@ -136,23 +170,30 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
 
     if (options.fileReplacements) {
       for (const replacement of options.fileReplacements) {
-        const replace = getSystemPath(normalize(resolve(root, normalize(replacement.replace))));
-        hostReplacementPaths[replace] = getSystemPath(normalize(resolve(root, normalize(replacement.with))));
+        const replace = getSystemPath(
+          normalize(resolve(root, normalize(replacement.replace)))
+        );
+        hostReplacementPaths[replace] = getSystemPath(
+          normalize(resolve(root, normalize(replacement.with)))
+        );
       }
     }
 
+    if (options.polyfills) {
+      this.entrypoints.polyfills = this.entrypoints.polyfills || [];
+      this.entrypoints.polyfills.push(
+        getSystemPath(normalize(resolve(root, normalize(options.polyfills))))
+      );
+    }
 
-    console.log(hostReplacementPaths);
-
+    
     if (options.main) {
       this.entrypoints.main = this.entrypoints.main || [];
-      this.entrypoints.main.push(  getSystemPath(normalize(resolve(root, normalize(options.main)))) );
+      this.entrypoints.main.push(
+        getSystemPath(normalize(resolve(root, normalize(options.main))))
+      );
     }
 
-    if (options.polyfills) {
-      this.entrypoints.polyfills = this.entrypoints.polyfills ||[];
-      this.entrypoints.polyfills.push(  getSystemPath(normalize(resolve(root, normalize(options.polyfills)))) );
-    }
 
     return {
       context: getSystemPath(root),
@@ -164,7 +205,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       entry: this.entrypoints,
       output: {
         path: getSystemPath(resolve(root, normalize(options.outputPath))),
-        filename: "[name].js",
+        filename: `[name]${hashFormat.chunk}.js`,
         devtoolModuleFilenameTemplate: "[absolute-resource-path]"
       },
       resolve: {
@@ -188,7 +229,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       },
       externals: [
         WebpackNodeExternals({
-          whitelist: [/@angular\/.*/, /@ng-ally\/.*/, /^rxjs\/.*/]
+          whitelist: [/@angular\/.*/, /@ng-ally\/.*/]
         })
       ],
       plugins: [
@@ -207,17 +248,32 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
             preserveSymlinks: options.preserveSymlinks
           }
         }),
-        new StringEntriesWebpackPlugin({
-          [options.outputName]: tags.stripIndents`
-            /** Automatically generated with @ng-ally/devkit **/
-            ${options.polyfills ? "require('./polyfills');" : ""}
-            ${options.main ? "require('./main');" : ""}   
-          `
+        new ChunkMergeWebpackPlugin({
+          banner: "/** Automatically generated with @ng-ally/devkit **/",
+          outputName: options.outputName,
+          chunks: ["polyfills", "main"]
         }),
         ...extraPlugins,
         ...this.plugins
       ]
     };
+  }
+
+  private _deleteOutputDir(root: Path, outputPath: Path, host: virtualFs.Host) {
+    const resolvedOutputPath = resolve(root, outputPath);
+    if (resolvedOutputPath === root) {
+      throw new Error("Output path MUST not be project root directory!");
+    }
+
+    return host.exists(resolvedOutputPath).pipe(
+      concatMap(exists =>
+        exists
+          ? // TODO: remove this concat once host ops emit an event.
+            concat(host.delete(resolvedOutputPath), of(null)).pipe(last())
+          : // ? of(null)
+            of(null)
+      )
+    );
   }
 }
 

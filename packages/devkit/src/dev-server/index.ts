@@ -63,10 +63,13 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
         serverBuilder.plugins.push(
           new ClusterWebpackPlugin({
             name: serverBuilderConfig.outputName,
-            args: [options.host, options.port.toString()],
+            env: {
+              NG_ALLY_HTTP_HOST: options.host,
+              NG_ALLY_HTTP_PORT: options.port
+            },
             execArgv: nodeArgs,
             inspectPort: options.inspectPort,
-            logger: this.context.logger as any as logging.Logger
+            logger: (this.context.logger as any) as logging.Logger
           })
         );
       }),
@@ -81,7 +84,8 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
       watch: true,
       verbose: options.verbose,
       progress: options.progress,
-      preserveSymlinks: options.preserveSymlinks
+      preserveSymlinks: options.preserveSymlinks,
+      deleteOutputPath: true
     };
     const buildTargetSpec = { project, target, configuration, overrides };
     const builderConfig = architect.getBuilderConfiguration(buildTargetSpec);

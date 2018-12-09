@@ -4,9 +4,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "allowSyntheticDefaultImports": true,
-    "paths": {},
-    "outDir": "../../dist/packages/platform-server"
+    "outDir": "../../dist/packages/socket",
+    "paths": {
+      "@ng-ally/platform-server": ["../../dist/packages-dist/platform-server"]
+    },
   },
 
   "files": [
@@ -17,7 +18,7 @@
     "annotateForClosureCompiler": true,
     "strictMetadataEmit": false,
     "skipTemplateCodegen": true,
-    "flatModuleOutFile": "platform-server.js",
-    "flatModuleId": "@ng-ally/platform-server"
+    "flatModuleOutFile": "socket.js",
+    "flatModuleId": "@ng-ally/socket"
   }
 }

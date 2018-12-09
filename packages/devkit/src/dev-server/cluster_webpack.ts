@@ -46,7 +46,7 @@ export class ClusterWebpackPlugin implements webpack.Plugin {
         cluster.removeListener("online", onlineHandler);
       };
       cluster.on("online", onlineHandler);
-      cluster.fork();
+      cluster.fork(this.options.env);
     });
   }
 
@@ -70,5 +70,6 @@ export class ClusterWebpackPlugin implements webpack.Plugin {
 
 export interface ClusterOptions extends cluster.ClusterSettings {
   name: string;
+  env?: any;
   logger: logging.Logger;
 }

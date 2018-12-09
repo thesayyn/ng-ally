@@ -4,19 +4,21 @@ import {
   APP_INITIALIZER,
   Inject
 } from "@angular/core";
-import { SOCKETIO_APP, HTTP_SERVER } from "./application_tokens";
-import socket from "socket.io";
+import { HTTP_SERVER } from "@ng-ally/platform-server";
+import { listen } from "socket.io";
+import { SOCKET_APP } from "./config";
+import { Socket } from "./socket.service";
 
 @NgModule({})
-export class SocketIOModule {
+export class SocketModule {
   static forRoot(options?: any): ModuleWithProviders {
     return {
       ngModule: this,
       providers: [
         {
-          provide: SOCKETIO_APP,
+          provide: SOCKET_APP,
           useFactory: server => {
-            return socket.listen(server, { ...options, serveClient: false });
+            return listen(server, { ...options, serveClient: false });
           },
           deps: [[new Inject(HTTP_SERVER)]]
         },
@@ -24,17 +26,13 @@ export class SocketIOModule {
           provide: APP_INITIALIZER,
           multi: true,
           useFactory: () => () => Promise.resolve(null),
-          deps: [[new Inject(SOCKETIO_APP)]]
+          deps: [[new Inject(SOCKET_APP)]]
         },
         {
-          provide: SocketIO,
-          useExisting: SOCKETIO_APP
+          provide: Socket,
+          useExisting: SOCKET_APP
         }
       ]
     };
   }
-}
-
-export abstract class SocketIO {
-  [key: string]: any;
 }

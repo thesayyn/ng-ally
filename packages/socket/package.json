@@ -1,0 +1,14 @@
+{
+    "name": "@ng-ally/socket",
+    "version": "0.0.0-PLACEHOLDER",
+    "module": "./esm5/socket.js",
+    "es2015": "./esm2015/socket.js",
+    "typings": "./socket.d.ts",
+    "dependencies": {
+        "socket.io": "^2.1.0",
+        "uws": "^9.148.0"
+    },
+    "peerDependencies": {
+        "@ng-ally/platform-server": "0.0.0-PLACEHOLDER"
+    }
+}
