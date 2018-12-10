@@ -1,6 +1,6 @@
 import { Injector, NgZone, ReflectiveInjector } from "@angular/core";
-import { from, Subject } from "rxjs";
-import { filter, first, map } from "rxjs/operators";
+import { from, of, Subject } from "rxjs";
+import { filter, first, map, switchMap } from "rxjs/operators";
 import { CheckFn, Checks, Guard, resolveChecks, swallowChecks } from "./checks";
 import {
   copyConfig,
@@ -211,9 +211,13 @@ export class Router {
       andObservables(
         from(checks).pipe(
           map(check =>
-            wrapIntoObservable(
-              check(activatedRoute.request, activatedRoute.response)
-            ).pipe(first())
+            of(null).pipe(
+              switchMap(() =>
+                wrapIntoObservable(
+                  check(activatedRoute.request, activatedRoute.response)
+                ).pipe(first())
+              )
+            )
           )
         )
       )
