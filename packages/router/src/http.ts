@@ -1,10 +1,11 @@
 import {
   Request as ExpressRequest,
   Response as ExpressResponse
-} from "express";
+} from 'express';
 
-export abstract class Request {
-  data?: any;
+export abstract class Request<USERT = any, DATAT = any> {
+  data?: DATAT;
+  user?: USERT
   [key: string]: any;
 }
 
