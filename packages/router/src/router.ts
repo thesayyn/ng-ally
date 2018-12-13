@@ -1,7 +1,7 @@
-import { Injector, NgZone, ReflectiveInjector } from "@angular/core";
-import { from, of, Subject } from "rxjs";
-import { filter, first, map, switchMap } from "rxjs/operators";
-import { CheckFn, Checks, Guard, resolveChecks, swallowChecks } from "./checks";
+import { Injector, NgZone, ReflectiveInjector } from '@angular/core';
+import { from, of, Subject } from 'rxjs';
+import { filter, first, map, switchMap } from 'rxjs/operators';
+import { CheckFn, Checks, Guard, resolveChecks, swallowChecks } from './checks';
 import {
   copyConfig,
   ExtraOptions,
@@ -9,12 +9,12 @@ import {
   Route,
   Routes,
   validateConfig
-} from "./config";
-import { Request, RequestHandler, RequestHandlerFn, Response } from "./http";
-import { ExpressNextFunction, ExpressRouter } from "./private_export";
-import { RouterErrorHandlingStrategy } from "./router_error_handler";
-import { andObservables, wrapIntoObservable } from "./utils";
-import { getZone } from "./zone";
+} from './config';
+import { Request, RequestHandler, RequestHandlerFn, Response } from './http';
+import { ExpressNextFunction, ExpressRouter } from './private_export';
+import { RouterErrorHandlingStrategy } from './router_error_handler';
+import { andObservables, wrapIntoObservable } from './utils';
+import { getZone } from './zone';
 
 export class Router {
   private _router: ExpressRouter;
@@ -37,6 +37,9 @@ export class Router {
         context.route
       )
     );
+  }
+
+  initialize(): void {
     this.resetConfig();
     this._router = this._createRouter();
     this.registerConfig();
@@ -50,7 +53,7 @@ export class Router {
     this._checks = swallowChecks(
       this._injector,
       this._guards || [],
-      "canActivate"
+      'canActivate'
     );
   }
 
@@ -94,17 +97,17 @@ export class Router {
     route.canActivate = resolveChecks(
       this._injector,
       route.canActivate || [],
-      "canActivate"
+      'canActivate'
     );
     route.canActivateChild = resolveChecks(
       this._injector,
       route.canActivateChild || [],
-      "canActivateChild"
+      'canActivateChild'
     );
     route.canDeactivate = resolveChecks(
       this._injector,
       route.canDeactivate || [],
-      "canDeactivate"
+      'canDeactivate'
     );
     if (route.children) {
       route.children.forEach(cr => this._resolveChecks(cr));
@@ -237,14 +240,14 @@ export class Router {
         activatedRoute.route.request
       );
 
-      if (typeof instance == "function") {
+      if (typeof instance == 'function') {
         (<RequestHandlerFn>instance)(
           activatedRoute.request,
           activatedRoute.response
         );
       } else if (
-        typeof instance == "object" &&
-        typeof (<RequestHandler>instance).handle == "function"
+        typeof instance == 'object' &&
+        typeof (<RequestHandler>instance).handle == 'function'
       ) {
         (<RequestHandler>instance).handle(
           activatedRoute.request,

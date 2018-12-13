@@ -1,6 +1,6 @@
-import { Injectable, Injector } from "@angular/core";
-import { EXPRESS_APP } from "@ng-ally/platform-server";
-import { Router } from "./router";
+import { Injectable, Injector } from '@angular/core';
+import { EXPRESS_APP } from '@ng-ally/platform-server';
+import { Router } from './router';
 
 @Injectable()
 export class RouterInitializer {
@@ -15,5 +15,10 @@ export class RouterInitializer {
       );
       resolve();
     });
+  }
+
+  bootstrapListener(): void {
+    const router = this.injector.get(Router);
+    router.initialize();
   }
 }

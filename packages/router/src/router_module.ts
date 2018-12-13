@@ -1,4 +1,5 @@
 import {
+  APP_BOOTSTRAP_LISTENER,
   APP_INITIALIZER,
   Inject,
   Injector,
@@ -6,26 +7,23 @@ import {
   NgModule,
   NgZone,
   Optional
-} from "@angular/core";
-import { Guard, ROUTER_GUARDS } from "./checks";
-import { ExtraOptions, EXTRA_OPTIONS, ROUTES, Routes } from "./config";
-import { Router } from "./router";
+} from '@angular/core';
+import { Guard, ROUTER_GUARDS } from './checks';
+import { ExtraOptions, EXTRA_OPTIONS, ROUTES, Routes } from './config';
+import { Router } from './router';
 import {
   DefaultRouterErrorHandler,
   ReportToErrorHandlerStrategy,
   RouterErrorHandlingStrategy,
   ROUTER_ERROR_HANDLER,
   SendThroughResponseStrategy
-} from "./router_error_handler";
-import { RouterInitializer } from "./router_initializer";
-import { flatten } from "./utils";
+} from './router_error_handler';
+import { RouterInitializer } from './router_initializer';
+import { flatten } from './utils';
 
 @NgModule({})
 export class RouterModule {
-  static forRoot(
-    routes: Routes,
-    config: ExtraOptions = {}
-  ): ModuleWithProviders {
+  static forRoot(routes: Routes, config: ExtraOptions = {}): ModuleWithProviders {
     return {
       ngModule: RouterModule,
       providers: [
@@ -84,7 +82,7 @@ export function provideErrorHandlingStrategy(config: ExtraOptions) {
     {
       provide: RouterErrorHandlingStrategy,
       useClass:
-        config.errorHandlingStrategy == "sendThroughResponse"
+        config.errorHandlingStrategy == 'sendThroughResponse'
           ? SendThroughResponseStrategy
           : ReportToErrorHandlerStrategy,
       deps: [Injector]
@@ -102,8 +100,12 @@ export function provideDefaultErrorHandler(): any {
   ];
 }
 
-export function getAppInitializer(r: RouterInitializer) {
+export function provideAppInitializer(r: RouterInitializer) {
   return r.appInitializer.bind(r);
+}
+
+export function provideBoostrapListener(r: RouterInitializer) {
+  return r.bootstrapListener.bind(r);
 }
 
 export function provideRouterInitializer(): any {
@@ -112,7 +114,13 @@ export function provideRouterInitializer(): any {
     {
       provide: APP_INITIALIZER,
       multi: true,
-      useFactory: getAppInitializer,
+      useFactory: provideAppInitializer,
+      deps: [RouterInitializer]
+    },
+    {
+      provide: APP_BOOTSTRAP_LISTENER,
+      multi: true,
+      useFactory: provideBoostrapListener,
       deps: [RouterInitializer]
     }
   ];
