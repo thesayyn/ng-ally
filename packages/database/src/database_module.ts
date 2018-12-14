@@ -1,12 +1,7 @@
-import {
-  APP_INITIALIZER,
-  Injector,
-  ModuleWithProviders,
-  NgModule
-} from "@angular/core";
-import { DatabaseConfig, DATABASE_CONFIG } from "./config";
-import { DatabaseInitializer } from "./database_initializer";
-import { DatabaseService } from "./database_service";
+import { APP_INITIALIZER, Injector, ModuleWithProviders, NgModule } from '@angular/core';
+import { DatabaseConfig, DATABASE_CONFIG } from './config';
+import { DatabaseInitializer } from './database_initializer';
+import { DatabaseService } from './database_service';
 
 @NgModule({})
 export class DatabaseModule {
