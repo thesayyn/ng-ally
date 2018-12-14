@@ -190,7 +190,7 @@ export class Router {
         } else {
           request.activatedRoute.next = next;
           request.activatedRoute.route = route;
-          request.data = route.data;
+          request.data = { ...request.data, ...route.data };
 
           this._invokeRequest(request.activatedRoute);
         }
