@@ -76,6 +76,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
                   statsJson.warnings.map(
                     (warning: any) => `WARNING in ${warning}`
                   )
+                  .join("\n\n")
                 );
               }
               if (stats.hasErrors()) {
@@ -229,7 +230,8 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       },
       externals: [
         WebpackNodeExternals({
-          whitelist: [/@angular\/.*/, /@ng-ally\/.*/]
+          whitelist: [/@angular\/(core|compiler)/, /@ng-ally\/.*/],
+          
         })
       ],
       plugins: [
