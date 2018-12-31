@@ -1,5 +1,5 @@
-import { Host, Stats, FileBuffer } from "./host";
 import * as fs from "fs";
+import { Host, Stats } from "./host";
 import { Path, PathFragment, URL } from "./path";
 
 type FsFunction0<R> = (cb: (err?: Error, result?: R) => void) => void;
@@ -34,41 +34,48 @@ function _callFs<ResultT>(fn: Function, ...args: {}[]): Promise<ResultT> {
 }
 
 export class NodeHost implements Host {
-  write(path: Path, content: FileBuffer): Promise<void> {
+  write(path: Path, content: Buffer): Promise<void> {
     return _callFs<void, string, Uint8Array>(
       fs.writeFile,
       path,
       new Uint8Array(content)
     );
   }
+
   delete(path: Path): Promise<void> {
     return _callFs(fs.unlink, path);
   }
+
   rename(from: Path, to: Path): Promise<void> {
     return _callFs(fs.rename, from, to);
   }
-  read(path: Path): Promise<FileBuffer> {
-    return _callFs(fs.readFile, path).then(
-      buffer => new Uint8Array(buffer as any).buffer
-    );
+
+  read(path: Path): Promise<Buffer> {
+    return _callFs(fs.readFile, path);
   }
+
   list(path: Path): Promise<PathFragment[]> {
     return _callFs(fs.readdir, path) as any as Promise<PathFragment[]>;
   }
+
   exists(path: Path): Promise<boolean> {
     return new Promise(resolve => {
       fs.exists(path, exists => resolve(exists));
     });
   }
+
   isDirectory(path: Path): Promise<boolean> {
     return _callFs(fs.stat, path).then((stat: any) => stat.isDirectory());
   }
+
   isFile(path: Path): Promise<boolean> {
     return _callFs(fs.stat, path).then((stat: any) => stat.isFile());
   }
+
   stat(path: Path): Promise<Stats> {
     return _callFs(fs.stat, path);
   }
+
   url(path: Path): Promise<URL> {
     throw new Error("Url method not supported on local.");
   }

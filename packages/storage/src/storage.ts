@@ -1,6 +1,6 @@
 import { Injector } from "@angular/core";
 import { Partition, StorageConfig, STORAGE_PARTITION } from "./config";
-import { FileBuffer, Host, Stats } from "./host";
+import { Host, Stats } from "./host";
 import { Path, PathFragment, URL } from "./path";
 
 export class Storage {
@@ -11,7 +11,7 @@ export class Storage {
     private hostMap: Map<string, any>
   ) {}
 
-  write(path: Path, content: ArrayBuffer, storage?: string): Promise<void> {
+  write(path: Path, content: Buffer, storage?: string): Promise<void> {
     const partition = this._getPartition(storage);
     const host = this._getHost(partition);
     return host.write(path, content);
@@ -30,7 +30,7 @@ export class Storage {
     return host.list(path);
   }
 
-  read(path: Path, storage?: string): Promise<FileBuffer> {
+  read(path: Path, storage?: string): Promise<Buffer> {
     const partition = this._getPartition(storage);
     const host = this._getHost(partition);
     return host.read(path as Path);

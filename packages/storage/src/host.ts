@@ -1,8 +1,5 @@
 import { Path, PathFragment, URL } from "./path";
 
-export type FileBuffer = ArrayBuffer;
-export type FileBufferLike = ArrayBufferLike;
-
 export type Stats<T extends object = {}> = T & {
   readonly size: number;
 
@@ -13,7 +10,7 @@ export type Stats<T extends object = {}> = T & {
 };
 
 export interface ReadonlyHost<StatsT extends object = {}> {
-  read(path: Path): Promise<FileBuffer>;
+  read(path: Path): Promise<Buffer>;
 
   list(path: Path): Promise<PathFragment[]>;
 
@@ -26,7 +23,7 @@ export interface ReadonlyHost<StatsT extends object = {}> {
 }
 
 export interface Host<StatsT extends object = {}> extends ReadonlyHost<StatsT> {
-  write(path: Path, content: FileBufferLike): Promise<void>;
+  write(path: Path, content: Buffer): Promise<void>;
   delete(path: Path): Promise<void>;
   rename(from: Path, to: Path): Promise<void>;
 }
