@@ -201,7 +201,6 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       devtool: sourcemaps,
       target: "node",
       mode: options.optimization ? "production" : "development",
-      node: false,
       watch: options.watch,
       entry: this.entrypoints,
       output: {

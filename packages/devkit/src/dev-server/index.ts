@@ -10,7 +10,7 @@ import { concatMap, tap } from "rxjs/operators";
 import { ServerBuilder } from "../build";
 import { ServerBuilderSchema } from "../build/schema";
 import { DevServerBuilderOptions } from "./schema";
-import { ClusterWebpackPlugin } from "./cluster_webpack";
+import { ChildProcessWebpackPlugin } from "./child_process";
 
 export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
   constructor(public context: BuilderContext) {}
@@ -61,14 +61,13 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
       tap(cfg => {
         serverBuilderConfig = cfg.options as ServerBuilderSchema;
         serverBuilder.plugins.push(
-          new ClusterWebpackPlugin({
+          new ChildProcessWebpackPlugin({
             name: serverBuilderConfig.outputName,
             env: {
               NG_ALLY_HTTP_HOST: options.host,
               NG_ALLY_HTTP_PORT: options.port
             },
             execArgv: nodeArgs,
-            inspectPort: options.inspectPort,
             logger: (this.context.logger as any) as logging.Logger
           })
         );
