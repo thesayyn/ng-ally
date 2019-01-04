@@ -39,7 +39,9 @@ export class ChildProcessWebpackPlugin implements webpack.Plugin {
 	apply(compiler: webpack.Compiler): void {
 		compiler.hooks.afterEmit.tapPromise('ChildProcessWebpackPlugin', (compilation) => {
 			if (this._process && !this._process.killed) {
-				process.kill(this._process.pid);
+				try {
+					this._process.kill();
+				} catch {}
 			}
 			return this._forkProcess(compilation).then((process) => {
 				this._process = process;
