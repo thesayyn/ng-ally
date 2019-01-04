@@ -229,7 +229,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
       },
       externals: [
         WebpackNodeExternals({
-          whitelist: [/@angular\/(core|compiler)/, /@ng-ally\/.*/],
+          whitelist: [/@angular\/(core|compiler|common)/, /@ng-ally\/.*/],
           
         })
       ],
