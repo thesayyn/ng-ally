@@ -1,4 +1,4 @@
 export * from "./socket.module";
-export * from "./socket.service";
+export * from "./types";
 export * from "./version";
 export * from "./config";

@@ -1,38 +1,55 @@
-import {
-  NgModule,
-  ModuleWithProviders,
-  APP_INITIALIZER,
-  Inject
-} from "@angular/core";
-import { HTTP_SERVER } from "@ng-ally/platform-server";
-import { listen } from "socket.io";
-import { SOCKET_APP } from "./config";
-import { Socket } from "./socket.service";
+import { APP_INITIALIZER, Inject, Injector, ModuleWithProviders, NgModule } from '@angular/core';
+import { HTTP_SERVER } from '@ng-ally/platform-server';
+import * as socket from 'socket.io';
+import { NAMESPACE, Namespaces, SOCKET_SERVER } from './config';
+import { SocketInitializer } from './socket.initializer';
+import { Server } from './types';
 
 @NgModule({})
 export class SocketModule {
-  static forRoot(options?: any): ModuleWithProviders {
-    return {
-      ngModule: this,
-      providers: [
-        {
-          provide: SOCKET_APP,
-          useFactory: server => {
-            return listen(server, { ...options, serveClient: false });
-          },
-          deps: [[new Inject(HTTP_SERVER)]]
-        },
-        {
-          provide: APP_INITIALIZER,
-          multi: true,
-          useFactory: () => () => Promise.resolve(null),
-          deps: [[new Inject(SOCKET_APP)]]
-        },
-        {
-          provide: Socket,
-          useExisting: SOCKET_APP
-        }
-      ]
-    };
-  }
+	static forRoot(namespaces: Namespaces, options?: Partial<socket.ServerOptions>): ModuleWithProviders<SocketModule> {
+		return {
+			ngModule: this,
+			providers: [
+				{ provide: NAMESPACE, multi: true, useValue: namespaces },
+				{
+					provide: SOCKET_SERVER,
+					useFactory: (server) => {
+						return socket.listen(server, {
+							...options,
+							transports: [ 'websocket' ],
+							serveClient: false
+						});
+					},
+					deps: [ [ new Inject(HTTP_SERVER) ] ]
+				},
+				{
+					provide: Server,
+					useExisting: SOCKET_SERVER
+				},
+				{ provide: SocketInitializer, useClass: SocketInitializer, deps: [ Injector ] },
+				{
+					provide: APP_INITIALIZER,
+					multi: true,
+					useFactory: provideSocketInitializer,
+					deps: [ SocketInitializer ]
+				}
+			]
+		};
+	}
+	static forChild(namespaces: Namespaces): ModuleWithProviders<SocketModule> {
+		return {
+			ngModule: SocketModule,
+			providers: [
+				{
+					provide: NAMESPACE,
+					useValue: namespaces
+				}
+			]
+		};
+	}
+}
+
+export function provideSocketInitializer(initializer: SocketInitializer) {
+	return initializer.initialize.bind(initializer);
 }
