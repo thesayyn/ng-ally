@@ -11,7 +11,7 @@ export class ChunkMergeWebpackPlugin implements webpack.Plugin {
       compilation
       .chunks
       .filter( (c: webpack.compilation.Chunk) => this.options.chunks.indexOf(c.name) > -1)
-      .sort((c: webpack.compilation.Chunk) => this.options.chunks.indexOf(c.name))
+      .sort((c: webpack.compilation.Chunk, b:webpack.compilation.Chunk) => this.options.chunks.indexOf(c.name) - this.options.chunks.indexOf(b.name))
       .map( (c: webpack.compilation.Chunk) => {
         content += `/** chunk ${c.name}.${c.renderedHash} **/\n`
         content += `${c.files.map( f => `require('./${f.replace('.js', '')}');\n` )}`

@@ -163,7 +163,7 @@ export class ServerBuilder implements Builder<ServerBuilderSchema> {
 
     if (options.progress !== false) {
       extraPlugins.push(
-        new ProgressPlugin({ profile: options.verbose, colors: true })
+        new ProgressPlugin({ profile: options.verbose })
       );
     }
 
