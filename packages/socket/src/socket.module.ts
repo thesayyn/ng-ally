@@ -15,7 +15,7 @@ export class SocketModule {
 				{
 					provide: SOCKET_SERVER,
 					useFactory: (server) => {
-						return socket.listen(server, {
+						return socket(server, {
 							...options,
 							transports: [ 'websocket' ],
 							serveClient: false

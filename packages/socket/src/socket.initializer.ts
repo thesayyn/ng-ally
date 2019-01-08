@@ -10,7 +10,6 @@ export class SocketInitializer {
         if ( namespaces.length < 1 ) {
             return;
         }
-        console.log(namespaces);
 		const socket = this.injector.get(SOCKET_SERVER);
 		namespaces.forEach((ns) => {
 			const namespace = socket.of(ns.path);
@@ -23,7 +22,6 @@ export class SocketInitializer {
 				name: `socket${ns.path}`
 			});
 			namespace.on('connection', (socket) => {
-                console.log('connected');
 				const handler = injector.get(ns.handler);
               
                 if (typeof handler.onConnect === 'function') {
