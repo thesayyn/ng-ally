@@ -9,5 +9,6 @@ export interface DevServerBuilderOptions {
     verbose: boolean;
     progress: boolean;
     preserveSymlinks: boolean;
+    includeEnv: boolean;
   }
   

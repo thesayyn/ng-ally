@@ -64,6 +64,7 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
           new ChildProcessWebpackPlugin({
             name: serverBuilderConfig.outputName,
             env: {
+              ...(options.includeEnv ? process.env: {}),
               NG_ALLY_HTTP_HOST: options.host,
               NG_ALLY_HTTP_PORT: options.port
             },

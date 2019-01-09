@@ -51,6 +51,11 @@
         "type": "boolean",
         "description": "Do not use the real path when resolving modules.",
         "default": false
+      },
+      "includeEnv": {
+        "type": "boolean",
+        "description": "Includes the master process environment variables into child process.",
+        "default": true
       }
     },
     "additionalProperties": false,
