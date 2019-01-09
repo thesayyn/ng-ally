@@ -85,7 +85,7 @@ export class DevServerBuilder implements Builder<DevServerBuilderOptions> {
       verbose: options.verbose,
       progress: options.progress,
       preserveSymlinks: options.preserveSymlinks,
-      deleteOutputPath: true
+      deleteOutputPath: options.deleteOutputPath
     };
     const buildTargetSpec = { project, target, configuration, overrides };
     const builderConfig = architect.getBuilderConfiguration(buildTargetSpec);

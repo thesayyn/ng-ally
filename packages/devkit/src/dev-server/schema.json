@@ -56,6 +56,11 @@
         "type": "boolean",
         "description": "Includes the master process environment variables into child process.",
         "default": true
+      },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
       }
     },
     "additionalProperties": false,

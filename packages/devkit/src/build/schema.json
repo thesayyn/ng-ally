@@ -83,7 +83,8 @@
     },
     "deleteOutputPath": {
       "type": "boolean",
-      "description": "Delete the output path before building."
+      "description": "Delete the output path before building.",
+      "default": "true"
     },
     "extractLicenses": {
       "type": "boolean",

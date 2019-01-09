@@ -10,5 +10,6 @@ export interface DevServerBuilderOptions {
     progress: boolean;
     preserveSymlinks: boolean;
     includeEnv: boolean;
+    deleteOutputPath: boolean;
   }
   
