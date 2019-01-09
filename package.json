@@ -1,6 +1,6 @@
 {
     "name": "tdadmin-srcs",
-    "version": "6.0.2",
+    "version": "6.0.4",
     "scripts": {
         "preinstall": "node -e \"if (process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('Use yarn instead of npm. See : https://yarnpkg.com/en/docs/install')\""
     },
